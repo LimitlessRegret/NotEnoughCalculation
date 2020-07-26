@@ -79,6 +79,12 @@ class RecipeCalculationViewModel : ViewModel() {
         solve()
     }
 
+    fun removeRecipe(recipeId: Int) {
+        group.removeRecipe(recipeId)
+        sortEntries()
+        solve()
+    }
+
     fun sortEntries() {
         solve()
 

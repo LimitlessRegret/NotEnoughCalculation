@@ -65,6 +65,14 @@ class RecipeTableView : View() {
                 }
             }
         }
+        setOnKeyPressed {
+            val selected = selectionModel.selectedItem
+                ?: return@setOnKeyPressed
+
+            if (it.code == KeyCode.DELETE) {
+                model.removeRecipe(selected.recipeId)
+            }
+        }
     }
 
     private fun onDoubleClick(recipe: RecipeSelection, itemAmount: ItemAmount?) {

@@ -64,6 +64,12 @@ class RecipeGroup : Controller() {
         }
     }
 
+    fun removeRecipe(recipeId: Int) {
+        if (recipes.remove(recipeId) == null) {
+            LOG.warn("Recipe $recipeId wasn't present!")
+        }
+    }
+
     fun toRecipeGraph(): DefaultDirectedGraph<DbRecipe, DefaultEdge> {
         val graph = DefaultDirectedGraph<DbRecipe, DefaultEdge>(DefaultEdge::class.java)
 
