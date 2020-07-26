@@ -69,7 +69,8 @@ class RecipeCalculationViewModel : ViewModel() {
 
     fun load(file: File) {
         group.load(file)
-        group.solve()
+        sortEntries()
+        solve()
     }
 
     fun addRecipe(recipeId: Int) {
