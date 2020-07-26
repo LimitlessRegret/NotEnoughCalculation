@@ -1,18 +1,14 @@
 package nec.gui.calculation
 
-import javafx.scene.Node
-import javafx.scene.control.TableCell
 import javafx.scene.control.TableColumn
 import javafx.scene.control.TableView
+import javafx.scene.input.KeyCode
 import javafx.scene.text.Font
 import javafx.scene.text.FontSmoothingType
 import javafx.stage.StageStyle
-import nec.gui.AppSettings
-import nec.gui.RecipeCalculationViewModel
-import nec.gui.findItem
+import nec.gui.*
 import nec.gui.recipe.ItemSearchMode
 import nec.gui.recipe.RecipeSearchView
-import nec.gui.toIntLikeString
 import tornadofx.*
 
 class RecipeTableView : View() {

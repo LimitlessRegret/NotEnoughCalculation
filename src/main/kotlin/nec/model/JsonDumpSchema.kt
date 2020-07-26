@@ -1,6 +1,7 @@
 package nec.model
 
-import kotlinx.serialization.*
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 interface ISchemaRecipe
 

@@ -11,7 +11,6 @@ import nec.gui.calculation.RecipeTableView
 import nec.gui.recipe.RecipeSearchView
 import nec.solver.RecipeMPSolverWrapper
 import tornadofx.*
-import java.io.File
 
 
 class MasterView : View() {

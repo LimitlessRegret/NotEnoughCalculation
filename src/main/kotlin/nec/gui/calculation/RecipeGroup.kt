@@ -1,19 +1,21 @@
 package nec.gui.calculation
 
 import javafx.beans.property.SimpleObjectProperty
-import nec.solver.RecipeMPSolverWrapper
-import nec.solver.RecipeSolverSolution
-import org.slf4j.LoggerFactory
-import tornadofx.*
-import kotlin.collections.HashMap
 import kotlinx.serialization.*
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonConfiguration
 import nec.dbmodel.DbRecipe
+import nec.solver.RecipeMPSolverWrapper
+import nec.solver.RecipeSolverSolution
 import org.jgrapht.graph.DefaultDirectedGraph
 import org.jgrapht.graph.DefaultEdge
+import org.slf4j.LoggerFactory
+import tornadofx.Controller
+import tornadofx.asObservable
+import tornadofx.getValue
+import tornadofx.setValue
 import java.io.File
 
 @Serializable

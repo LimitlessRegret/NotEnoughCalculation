@@ -11,7 +11,6 @@ import javafx.scene.control.RadioButton
 import javafx.scene.control.TableCell
 import javafx.scene.control.TableRow
 import javafx.scene.input.MouseEvent
-import nec.gui.calculation.ItemAmount
 import reactor.core.publisher.Mono
 import reactor.core.scheduler.Schedulers
 import tornadofx.*

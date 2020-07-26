@@ -4,7 +4,6 @@ import com.google.ortools.linearsolver.MPSolver
 import nec.dbmodel.DbRecipe
 import nec.dbmodel.DbRecipeItem
 import nec.dbmodel.tables.pojos.Item
-import nec.dumpState
 import nec.gui.calculation.RecipeGroup
 import nec.solver.RecipeSolverSolution
 import org.apache.commons.math3.fraction.BigFraction
@@ -59,7 +58,7 @@ class RecipeSolverIP(
     fun solve(): RecipeSolverSolution {
         setupMatrix()
 
-        System.loadLibrary("jniortools");
+        System.loadLibrary("jniortools")
 
         val solver = MPSolver("SimpleLpProgram", MPSolver.OptimizationProblemType.CBC_MIXED_INTEGER_PROGRAMMING)
         val objective = solver.objective()

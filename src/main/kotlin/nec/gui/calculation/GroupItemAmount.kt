@@ -9,7 +9,10 @@ package nec.gui.calculation
 import javafx.beans.property.SimpleBooleanProperty
 import javafx.beans.property.SimpleDoubleProperty
 import javafx.beans.property.SimpleObjectProperty
-import kotlinx.serialization.*
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
+import kotlinx.serialization.UseSerializers
 import nec.RecipeDatabase
 import nec.persistence.SimpleBooleanPropertySerializer
 import nec.persistence.SimpleDoublePropertySerializer

@@ -4,7 +4,6 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonConfiguration
 import nec.dbmodel.SqliteInterface
 import nec.dbmodel.tables.pojos.Recipe
-import nec.dbmodel.tables.pojos.RecipeItem
 import nec.timeThis
 import java.io.File
 
@@ -108,8 +107,8 @@ class SchemaImporter {
     }
 
     fun saveToDb() {
-        timeThis("saveRecipes") {sqliteInterface.saveRecipes(recipes)}
-        timeThis("saveRecipeItems") {sqliteInterface.saveRecipeItems(recipeItems)}
+        timeThis("saveRecipes") { sqliteInterface.saveRecipes(recipes) }
+        timeThis("saveRecipeItems") { sqliteInterface.saveRecipeItems(recipeItems) }
     }
 
     private inline fun toRecipeItemArray(
@@ -120,5 +119,5 @@ class SchemaImporter {
         amount: Int?,
         chance: Int?,
         isOutput: Boolean
-    ):Array<Any?> = arrayOf(recipeId, itemId, oreDictId, slot, amount, chance, isOutput)
+    ): Array<Any?> = arrayOf(recipeId, itemId, oreDictId, slot, amount, chance, isOutput)
 }

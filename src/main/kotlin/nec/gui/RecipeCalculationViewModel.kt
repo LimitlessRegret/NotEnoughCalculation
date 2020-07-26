@@ -2,11 +2,10 @@ package nec.gui
 
 import javafx.beans.binding.Binding
 import javafx.beans.property.SimpleIntegerProperty
-import javafx.beans.property.SimpleStringProperty
-import javafx.collections.MapChangeListener
-import javafx.collections.ObservableList
-import javafx.collections.ObservableMap
-import nec.gui.calculation.*
+import nec.gui.calculation.GroupItemAmount
+import nec.gui.calculation.ItemAmount
+import nec.gui.calculation.RecipeGroup
+import nec.gui.calculation.RecipeSelection
 import org.jgrapht.alg.scoring.PageRank
 import tornadofx.*
 import java.io.File

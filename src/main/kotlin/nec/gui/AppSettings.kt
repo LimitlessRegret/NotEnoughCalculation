@@ -1,7 +1,9 @@
 package nec.gui
 
 import javafx.beans.property.SimpleBooleanProperty
-import tornadofx.*
+import tornadofx.Controller
+import tornadofx.getValue
+import tornadofx.setValue
 
 class AppSettings : Controller() {
     val showInfiniteCostsProperty = SimpleBooleanProperty(false)
