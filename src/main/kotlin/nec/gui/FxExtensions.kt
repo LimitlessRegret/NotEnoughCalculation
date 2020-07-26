@@ -65,7 +65,8 @@ fun TableCell<*, *>.setDefaultTableCellStyles() {
     // Why do these sometimes disappear?
     toggleClass(Stylesheet.cell, true)
     toggleClass(Stylesheet.indexedCell, true)
-    toggleClass(Stylesheet.tableCell, true)
+    removeClass(Stylesheet.tableCell)
+    toggleClass(Styles.itemCell, true)
     toggleClass(Stylesheet.tableColumn, true)
     toggleClass(Stylesheet.textField, true)
 }

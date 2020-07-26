@@ -108,11 +108,22 @@ class RecipeTableView : View() {
                 cellFormat {
                     itemProperty().onChange {
                         if (it == null) {
+                            removeClass(Styles.itemRawInput, Styles.itemOutput)
                             backgroundProperty().unbind()
                             backgroundProperty().set(null)
                         }
                     }
+                    setDefaultTableCellStyles()
+                    removeClass(Styles.itemRawInput, Styles.itemOutput)
                     text = item?.displayProperty?.get()
+                    model.group.items[item?.itemId]?.let { groupItem ->
+                        if (!isIngredient && groupItem.wantAmount > 0) {
+                            addClass(Styles.itemOutput)
+                        }
+                        if (isIngredient && groupItem.rawIngredientAmountProperty.get() > 0) {
+                            addClass(Styles.itemRawInput)
+                        }
+                    }
 
                     if (item != null) {
                         backgroundProperty().bind(model.itemHighlights.getBackgroundFor(item!!.itemId))

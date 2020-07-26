@@ -1,6 +1,8 @@
 package nec.gui.calculation
 
+import javafx.beans.property.Property
 import javafx.scene.control.TableColumn
+import javafx.scene.control.cell.TextFieldTableCell
 import javafx.util.converter.NumberStringConverter
 import nec.gui.*
 import tornadofx.*
@@ -49,9 +51,15 @@ class CombinedItemsView : View() {
     }
 
     private fun TableColumn<GroupItemAmount, Number?>.applyCommonEditable() {
-        applyCommon()
+        setCellFactory {
+            val cell = TextFieldTableCell<GroupItemAmount, Number?>(NumberStringConverter())
+            cell.setDefaultTableCellStyles()
 
-        this.useTextField(NumberStringConverter()) {
+            cell
+        }
+        setOnEditCommit {
+            val property = it.tableColumn.getCellObservableValue(it.rowValue) as Property<Number?>
+            property.value = it.newValue
             model.solve()
         }
     }
