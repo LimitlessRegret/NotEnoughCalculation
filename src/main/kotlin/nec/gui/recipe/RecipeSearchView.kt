@@ -11,6 +11,7 @@ import nec.dbmodel.DbRecipe
 import nec.gui.RecipeCalculationViewModel
 import nec.gui.activateOn
 import nec.gui.recipe.ItemSearchMode.*
+import nec.isProgrammedCircuit
 import tornadofx.*
 
 
@@ -195,21 +196,21 @@ class RecipeSearchView : Fragment("Recipe Search") {
         sb.appendLine()
 
         sb.appendLine("Input:")
-        recipe.ingredients
-            .groupBy { it.item }
-            .forEach { (item, ingredients) ->
-                val totalAmount = ingredients.sumBy { it.amount }
-                sb.append("    ${totalAmount}x ${item?.localizedName}")
-                if (item?.damage != null) {
-                    sb.append(" (${item.damage})")
-                }
-                sb.appendLine()
+        recipe.normalIngredients.forEach {
+            sb.append("    ${it.amount}x ${it.item.localizedName}")
+            if (it.item.isProgrammedCircuit()) {
+                sb.append(" (${it.item.damage})")
             }
+            sb.appendLine()
+        }
+        recipe.oreDictIngredients.forEach {
+            sb.appendLine("    ${it.amount}x ${it.oreDicts.joinToString(", ") { it.name }}")
+        }
 
         sb.appendLine()
         sb.appendLine("Output:")
         recipe.results.forEach { result ->
-            sb.appendLine("    ${result.amount}x ${result.item?.localizedName}")
+            sb.appendLine("    ${result.amount}x ${result.item.localizedName}")
         }
 
         return sb.toString()

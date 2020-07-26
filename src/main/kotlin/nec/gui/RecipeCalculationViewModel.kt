@@ -48,14 +48,16 @@ class RecipeCalculationViewModel : ViewModel() {
         return group.solutionProperty.objectBinding(itemsProperty) {
             val crafts = it?.recipeCrafts?.get(selection.recipe.id) ?: 0.0
             val recipeItem = itemsProperty.get()?.getOrNull(index) ?: return@objectBinding null
-            val itemId = recipeItem.item?.id ?: return@objectBinding null
+            val itemId = recipeItem.item.id ?: return@objectBinding null
 
-            ItemAmount(itemId, recipeItem.amount?.times(crafts) ?: -1.0, isIngredient)
+            ItemAmount(itemId, recipeItem.amount.times(crafts), isIngredient)
         }
     }
 
     private fun updateMaxIngredientsAndResults() {
-        maxIngredients = recipeItemsListProperty.map { it.recipe.ingredients.size }.maxOrNull() ?: 0
+        maxIngredients = recipeItemsListProperty
+            .map { it.recipe.oreDictIngredients.size + it.recipe.normalIngredients.size }
+            .maxOrNull() ?: 0
         maxResults = recipeItemsListProperty.map { it.recipe.results.size }.maxOrNull() ?: 0
     }
 
@@ -97,12 +99,11 @@ class RecipeCalculationViewModel : ViewModel() {
         val addedItems = HashSet<Int>()
         val sorted = ArrayList<GroupItemAmount>()
         recipeItemsListProperty.forEach { sel ->
-            (sel.recipe.results + sel.recipe.ingredients)
-                .mapNotNull { it.item }
+            (sel.recipe.results + sel.ingredientsProperty.get())
                 .forEach {
-                    if (it.id !in addedItems) {
-                        addedItems.add(it.id)
-                        sorted.add(group.items.getValue(it.id))
+                    if (it.item.id !in addedItems) {
+                        addedItems.add(it.item.id)
+                        sorted.add(group.items.getValue(it.item.id))
                     }
                 }
         }

@@ -1,5 +1,6 @@
 package nec.dbmodel
 
+import nec.DbOreDictInfo
 import nec.dbmodel.Tables.*
 import nec.dbmodel.tables.pojos.*
 import nec.model.SchemaDbItem
@@ -127,6 +128,19 @@ class SqliteInterface(database: String) {
             .selectFrom(ITEM)
             .where(ITEM.ID.`in`(itemIds))
             .fetchInto(Item::class.java)
+    }
+
+    fun getOreDicts(ids: Collection<Int>) = dslContext.use {
+        val groupItems = it
+            .selectFrom(ORE_DICT_ITEM)
+            .where(ORE_DICT_ITEM.ORE_DICT_ID.`in`(ids))
+            .groupBy { it.oreDictId }
+            .mapValues { it.value.map { it.itemId }.toIntArray() }
+
+        it
+            .selectFrom(ORE_DICT_GROUP)
+            .where(ORE_DICT_GROUP.ID.`in`(ids))
+            .fetch { DbOreDictInfo(it.id, it.name, groupItems[it.id] ?: intArrayOf()) }
     }
 
     fun findRecipeByItem(itemIds: Collection<Int>, isOutput: Boolean? = null) = dslContext.use {

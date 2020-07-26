@@ -3,10 +3,10 @@ package nec.solver
 import com.google.ortools.linearsolver.MPConstraint
 import com.google.ortools.linearsolver.MPSolver
 import com.google.ortools.linearsolver.MPVariable
-import nec.dbmodel.DbRecipe
 import nec.dumpState
 import nec.gui.calculation.GroupItemAmount
 import nec.gui.calculation.RecipeGroup
+import nec.gui.calculation.RecipeSelection
 import nec.setNativeLibraryPath
 import org.slf4j.LoggerFactory
 
@@ -33,8 +33,8 @@ class RecipeMPSolverWrapper {
         taxExpr.setBounds(0.0, Double.POSITIVE_INFINITY)
     }
 
-    fun addRecipe(recipe: DbRecipe) {
-        recipes[recipe.id] = RecipeConfig(MinimalRecipe(recipe))
+    fun addRecipe(recipe: RecipeSelection) {
+        recipes[recipe.recipeId] = RecipeConfig(MinimalRecipe(recipe))
     }
 
     fun setItemInfinite(itemId: Int, cost: Double) {
@@ -284,7 +284,6 @@ class RecipeMPSolverWrapper {
             val wrapper = RecipeMPSolverWrapper()
 
             group.recipes.values
-                .map { it.recipe }
                 .forEach(wrapper::addRecipe)
             group.items.values
                 .forEach(wrapper::applyItemConfiguration)

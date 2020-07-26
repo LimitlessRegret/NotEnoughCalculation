@@ -76,14 +76,15 @@ class RecipeGroup : Controller() {
         val graph = DefaultDirectedGraph<DbRecipe, DefaultEdge>(DefaultEdge::class.java)
 
         val recipesByProducts = recipes.values
-            .flatMap { recipe -> recipe.recipe.results.map { it.item?.id to recipe.recipe } }
+            .flatMap { recipe -> recipe.recipe.results.map { it.item.id to recipe.recipe } }
             .groupBy { it.first }
             .mapValues { it.value.map { it.second } }
 
         recipes.values.forEach { graph.addVertex(it.recipe) }
         recipes.values.forEach { sel ->
-            sel.recipe.ingredients
-                .mapNotNull { it.item?.id }
+            sel.ingredientsProperty
+                .get()
+                .mapNotNull { it.item.id }
                 .flatMap { recipesByProducts[it] ?: emptyList() }
                 .toSet()
                 .forEach {

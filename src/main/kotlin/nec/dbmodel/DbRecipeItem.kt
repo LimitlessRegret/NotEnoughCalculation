@@ -18,7 +18,8 @@ class DbRecipeItem(recipeItem: RecipeItem, item: Item?) {
                 "slot=$slot, " +
                 "isOutput=$isOutput, " +
                 "amount=$amount, " +
-                "item=$item" +
+                "item=$item," +
+                "oreDictId=$oreDictId" +
                 ")"
     }
 }

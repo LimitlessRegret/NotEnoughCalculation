@@ -1,11 +1,32 @@
 package nec
 
 import nec.dbmodel.DbRecipe
-import nec.dbmodel.DbRecipeItem
 import nec.dbmodel.SqliteInterface
 import nec.dbmodel.tables.pojos.Item
 import nec.dbmodel.tables.pojos.Recipe
+import nec.dbmodel.tables.pojos.RecipeItem
 import org.slf4j.LoggerFactory
+
+data class DbOreDictInfo(
+    val id: Int,
+    val name: String,
+    val itemsIds: IntArray,
+) {
+    lateinit var items: Array<Item>
+}
+
+data class RecipeOreDictItemAmount(
+    val oreDicts: Collection<DbOreDictInfo>,
+    val amount: Int,
+)
+
+data class RecipeItemAmount(
+    val item: Item,
+    val amount: Int,
+    val chance: Int?
+)
+
+typealias OreDictSet = Collection<Int>
 
 class RecipeDatabase {
     companion object {
@@ -16,6 +37,7 @@ class RecipeDatabase {
     private val sqliteInterface = SqliteInterface("nec.db") // TODO
     private val itemCache = HashMap<Int, Item>()
     private val recipeCache = HashMap<Int, DbRecipe>()
+    private val oreDictCache = HashMap<Int, DbOreDictInfo>()
 
     fun lookupByLocalizedName(query: String): Collection<Int> {
         return sqliteInterface.searchItems(query)
@@ -52,31 +74,95 @@ class RecipeDatabase {
         }
 
         val recipeItems = sqliteInterface.getRecipeItems(cacheMiss.map { it.id })
-            .groupBy { Triple(it.recipeId, it.slot, it.isOutput) }
-            .map { (key, value) ->
-                value
-                    .sortedBy { it.itemId }
-                    .let {
-                        if (key.second == null) it
-                        else it.take(1)
-                    }
-            }
-            .flatten()
+        val referencedOreDicts = recipeItems
+            .mapNotNull { it.oreDictId }
+            .toSet()
         val recipeItemsByRecipe = recipeItems.groupBy { it.recipeId }
 
-        ensureItemsLoaded(recipeItems.mapNotNull { it.itemId })
+        ensureOreDictsLoaded(referencedOreDicts)
+        ensureItemsLoaded(recipeItems.mapNotNull { it.itemId } +
+                referencedOreDicts.flatMap { oreDictCache[it]?.itemsIds?.toList() ?: emptyList() })
+        referencedOreDicts
+            .mapNotNull { oreDictCache[it] }
+            .forEach {
+                it.items = it.itemsIds
+                    .map { itemCache[it] }
+                    .filterNotNull()
+                    .toTypedArray()
+            }
 
         val missed = cacheMiss.map { recipe ->
-            DbRecipe(
-                recipe,
-                recipeItemsByRecipe[recipe.id]
-                    ?.map { DbRecipeItem(it, itemCache[it.itemId]) }
-                    ?: emptyList()
-            )
+            prepareRecipe(recipe, recipeItemsByRecipe[recipe.id] ?: emptyList())
         }
         missed.associateByTo(recipeCache) { it.id }
 
         return cacheHit.map { recipeCache.getValue(it.id) } + missed
+    }
+
+    private fun prepareRecipe(
+        recipe: Recipe,
+        recipeItems: Collection<RecipeItem>
+    ): DbRecipe {
+        val (output, input) = recipeItems.partition { it.isOutput }
+        val (oreDictSlots, nonOreDictSlots) = input.partition { it.oreDictId != null }
+
+        // sanity check - there should be only one possible item in non-oredict slots
+        nonOreDictSlots
+            .groupBy { it.slot }
+            .forEach { (_, v) ->
+                require(v.size == 1)
+            }
+
+        val oreDictInputs = oreDictSlots
+            .groupBy { it.slot }
+            .mapValues {
+                @Suppress("USELESS_CAST")
+                it.value.mapNotNull { it.oreDictId } as OreDictSet to it.value.first().amount
+            }
+            .toList()
+            .groupBy { it.second.first } // group by ore dicts allowed in slot
+            .mapValues { (_, v) ->
+                // combine amounts for slots with the same sets of ore dicts
+                v.sumBy { it.second.second } to v.map { it.first }
+            }
+            .toList()
+            .sortedBy {
+                it.second.second.minOrNull()
+            }
+            .map { (oreDicts, info) ->
+                // discard slot info
+                RecipeOreDictItemAmount(oreDicts.map { oreDictCache.getValue(it) }, info.first)
+            }
+
+        return DbRecipe(
+            recipe,
+            input
+                .filter { it.itemId in itemCache }
+                .groupBy { it.itemId to it.chance }
+                .map {
+                    RecipeItemAmount(
+                        itemCache.getValue(it.key.first),
+                        it.value.sumBy { it.amount ?: 0 },
+                        it.key.second
+                    )
+                },
+            oreDictInputs,
+            output
+                .filter { it.itemId in itemCache }
+                .map { RecipeItemAmount(itemCache.getValue(it.itemId), it.amount ?: 0, it.chance) },
+        )
+    }
+
+    fun ensureOreDictsLoaded(ids: Collection<Int>) {
+        val itemIds = ids.toSet()
+        val (cacheHit, cacheMiss) = itemIds.partition { it in oreDictCache }
+        LOG.debug("ensureOreDictsLoaded(${itemIds.size} items) - hit: $cacheHit, miss: $cacheMiss")
+
+        if (cacheMiss.isNotEmpty()) {
+            timeThis("load ${cacheMiss.size} ore dict groups into cache", debug = true) {
+                sqliteInterface.getOreDicts(cacheMiss).associateByTo(oreDictCache) { it.id }
+            }
+        }
     }
 
     private fun ensureItemsLoaded(itemIds: List<Int>) {
@@ -96,12 +182,4 @@ class RecipeDatabase {
 
         return itemCache.getValue(itemId)
     }
-
-//    fun findLocalizedName(internalName: String): String {
-//        return itemNameMap.getOrDefault(internalName, "[$internalName]")
-//    }
-
-//    fun lookupRecipeMachine(recipe: RecipeOrMachineRecipe): String {
-//        return recipeSourceMap.getOrDefault(recipe, "Unknown")
-//    }
 }

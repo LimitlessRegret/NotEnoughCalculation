@@ -86,8 +86,8 @@ class RecipeTableView : View() {
 
     private fun onRecipeRowClick(recipe: RecipeSelection) {
         model.itemHighlights.onlyHighlight(
-            (recipe.recipe.ingredients.map { it.item?.id } +
-                    recipe.recipe.results.map { it.item?.id })
+            (recipe.ingredientsProperty.get().map { it.item.id } +
+                    recipe.recipe.results.map { it.item.id })
                 .filterNotNull()
         )
     }

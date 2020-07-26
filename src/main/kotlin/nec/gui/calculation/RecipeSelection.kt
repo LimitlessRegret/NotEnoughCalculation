@@ -1,9 +1,12 @@
 package nec.gui.calculation
 
+import javafx.beans.binding.Bindings
 import javafx.beans.property.SimpleIntegerProperty
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import nec.RecipeDatabase
+import nec.RecipeItemAmount
+import tornadofx.asObservable
 import tornadofx.getValue
 import tornadofx.toProperty
 
@@ -16,7 +19,7 @@ class RecipeSelection(
 
     @Transient
     val recipe = RecipeDatabase.instance.getRecipe(recipeId)
-    val slotOverrides = HashMap<Int, Int>() // TODO
+    val slotOverrides = HashMap<Int, Int>().asObservable() // TODO
 
     @Transient
     val cachedSolutionProperty = SimpleIntegerProperty()
@@ -26,7 +29,21 @@ class RecipeSelection(
     val machineProperty = recipe.machine.toProperty()
 
     @Transient
-    val ingredientsProperty = recipe.ingredients.toProperty()
+    val ingredientsProperty = Bindings.createObjectBinding({
+        recipe.normalIngredients + recipe.oreDictIngredients.flatMapIndexed { idx, odi ->
+            val item = if (idx in slotOverrides) {
+                RecipeDatabase.instance.getItem(slotOverrides.getValue(idx))
+            } else {
+                odi.oreDicts
+                    .asSequence()
+                    .map { it.items.firstOrNull() }
+                    .firstOrNull()
+                    ?: return@flatMapIndexed emptyList()
+            }
+
+            listOf(RecipeItemAmount(item, odi.amount, null))
+        }
+    }, slotOverrides)
 
     @Transient
     val resultsProperty = recipe.results.toProperty()

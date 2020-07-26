@@ -13,13 +13,13 @@ object TestCalculate {
         val targetItemId = 11274
 
         val rmsw = RecipeMPSolverWrapper()
-        rmsw.addRecipe(recipeDb.getRecipe(193341)) // pyrolyse oven in ct
-        rmsw.addRecipe(recipeDb.getRecipe(125580)) // iron plate in pb
+//        rmsw.addRecipe(recipeDb.getRecipe(193341)) // pyrolyse oven in ct
+//        rmsw.addRecipe(recipeDb.getRecipe(125580)) // iron plate in pb
 
         val rg = RecipeGroup()
         rg.addRecipe(193341)
         rg.addRecipe(125580)
-        rg.items[targetItemId] = GroupItemAmount(targetItemId).apply { wantAmount=1.0 }
+        rg.items[targetItemId] = GroupItemAmount(targetItemId).apply { wantAmount = 1.0 }
 
         rmsw.applyItemConfiguration(GroupItemAmount(targetItemId).apply { wantAmount = 1.0 })
         val results = timeThis("getResults") { rmsw.getResults() }

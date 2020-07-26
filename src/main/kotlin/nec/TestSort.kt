@@ -1,10 +1,7 @@
 package nec
 
 import nec.dbmodel.DbRecipe
-import nec.gui.calculation.GroupItemAmount
 import nec.gui.calculation.RecipeGroup
-import nec.solver.RecipeMPSolverWrapper
-import org.jgrapht.Graph
 import org.jgrapht.alg.scoring.PageRank
 import org.jgrapht.graph.DefaultDirectedGraph
 import org.jgrapht.graph.DefaultEdge
@@ -27,14 +24,15 @@ object TestSort {
         val graph = DefaultDirectedGraph<DbRecipe, DefaultEdge>(DefaultEdge::class.java)
 
         val recipesByProducts = rg.recipes.values
-            .flatMap { recipe -> recipe.recipe.results.map { it.item?.id to recipe.recipe } }
+            .flatMap { recipe -> recipe.recipe.results.map { it.item.id to recipe.recipe } }
             .groupBy { it.first }
             .mapValues { it.value.map { it.second } }
 
         rg.recipes.values.forEach { graph.addVertex(it.recipe) }
         rg.recipes.values.forEach { sel ->
-            sel.recipe.ingredients
-                .mapNotNull { it.item?.id }
+            sel.ingredientsProperty
+                .get()
+                .mapNotNull { it.item.id }
                 .flatMap { recipesByProducts[it] ?: emptyList() }
                 .toSet()
                 .forEach {
@@ -43,18 +41,18 @@ object TestSort {
         }
 
         val pr = PageRank(graph)
-        pr.scores.forEach {(recipe, score) ->
+        pr.scores.forEach { (recipe, score) ->
             println("${recipe.id}: $score")
         }
     }
 
     fun bfs(rg: RecipeGroup) {
         val recipesByProducts = rg.recipes.values
-            .flatMap { recipe -> recipe.recipe.results.map { it.item?.id to recipe.recipeId } }
+            .flatMap { recipe -> recipe.recipe.results.map { it.item.id to recipe.recipeId } }
             .groupBy { it.first }
             .mapValues { it.value.map { it.second } }
         val recipeIngredients = rg.recipes.values
-            .associateWith { it.recipe.ingredients.mapNotNull { it.item?.id } }
+            .associateWith { it.ingredientsProperty.get().mapNotNull { it.item.id } }
 
         val seenRecipes = HashSet<Int>()
         val rootItems = rg.items.values

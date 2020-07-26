@@ -1,21 +1,20 @@
 package nec.solver
 
-import nec.dbmodel.DbRecipe
+import nec.gui.calculation.RecipeSelection
 
 class MinimalRecipe(
     val id: Int,
     val ingredients: Array<Pair<Int, Int>>,
     val results: Array<Pair<Int, Int>>
 ) {
-    constructor(recipe: DbRecipe) : this(
-        recipe.id,
-        recipe.ingredients
-            .filter { it.item != null }
-            .map { it.item!!.id to it.amount }
+    constructor(selection: RecipeSelection) : this(
+        selection.recipeId,
+        selection.ingredientsProperty
+            .get()
+            .map { it.item.id to it.amount }
             .toTypedArray(),
-        recipe.results
-            .filter { it.item != null }
-            .map { it.item!!.id to it.amount }
+        selection.recipe.results
+            .map { it.item.id to it.amount }
             .toTypedArray(),
     )
 }
