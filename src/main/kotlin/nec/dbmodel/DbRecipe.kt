@@ -40,8 +40,10 @@ class DbRecipe(recipe: Recipe, items: Collection<DbRecipeItem>) {
 private fun DbRecipeItem.copyWithAmount(totalAmount: Int) = RecipeItem(
     recipeId,
     item?.id,
+    oreDictId,
     slot,
     totalAmount,
+    chance,
     isOutput
 )
 

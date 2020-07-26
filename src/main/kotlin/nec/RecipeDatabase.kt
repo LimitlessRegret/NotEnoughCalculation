@@ -64,7 +64,7 @@ class RecipeDatabase {
             .flatten()
         val recipeItemsByRecipe = recipeItems.groupBy { it.recipeId }
 
-        ensureItemsLoaded(recipeItems.map { it.itemId })
+        ensureItemsLoaded(recipeItems.mapNotNull { it.itemId })
 
         val missed = cacheMiss.map { recipe ->
             DbRecipe(

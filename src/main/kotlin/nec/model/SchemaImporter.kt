@@ -2,9 +2,7 @@ package nec.model
 
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonConfiguration
-import nec.dbmodel.DbRecipe
 import nec.dbmodel.SqliteInterface
-import nec.dbmodel.tables.pojos.Item
 import nec.dbmodel.tables.pojos.Recipe
 import nec.dbmodel.tables.pojos.RecipeItem
 import nec.timeThis
@@ -15,16 +13,14 @@ data class SchemaDbItem(
     val localizedName: String,
     val internalName: String,
     val isFluid: Boolean,
-    val config: Int?
+    val damage: Int
 )
 
 class SchemaImporter {
     private val sqliteInterface = SqliteInterface("nec.db") // TODO
     private var recipeIdCounter = 1
-    private var itemIdCounter = 1
-    private val itemCache = HashMap<SchemaDbItem, Int>()
     private val recipes = ArrayList<Recipe>()
-    private val recipeItems = ArrayList<RecipeItem>()
+    private val recipeItems = ArrayList<Array<Any?>>()
 
     fun loadFile(filename: String) {
         val jsonString = timeThis("load text") {
@@ -40,16 +36,29 @@ class SchemaImporter {
     }
 
     fun load(model: JsonDumpSchema) {
+        sqliteInterface.saveItems(model.items.map { item ->
+            SchemaDbItem(
+                item.id,
+                item.localizedName ?: "[null]",
+                item.internalName ?: "[null]",
+                item.isFluid,
+                item.damage
+            )
+        })
+        sqliteInterface.saveOreDictNames(model.oreDict.mapIndexed { idx, oreDict -> oreDict.name to idx })
+        sqliteInterface.saveOreDictItems(model.oreDict.flatMapIndexed { idx, oreDict ->
+            oreDict.ids.map { idx to it }
+        })
         model.sources.forEach {
             when {
-                it.machines != null -> timeThis("load ${it.machines.size} ${it.type} machines") {
+                it.machines != null -> timeThis("load ${it.machines.size} ${it.type ?: it.name} machines") {
                     it.machines.forEach { machine ->
                         machine.recipes.forEach { loadRecipe(machine.name, it) }
                     }
                 }
-                it.recipes != null -> timeThis("load ${it.recipes.size} ${it.type} recipes") {
+                it.recipes != null -> timeThis("load ${it.recipes.size} ${it.type ?: it.name} recipes") {
                     it.recipes.forEach { recipe ->
-                        loadRecipe(it.type, recipe)
+                        loadRecipe(it.type ?: it.name!!, recipe)
                     }
                 }
                 else -> TODO()
@@ -57,52 +66,24 @@ class SchemaImporter {
         }
     }
 
-    private fun loadItem(item: SchemaItem, fluid: Boolean): Pair<Int, Int> {
-        if (item.internalName == null) {
-            return -1 to item.amount.toInt()
-        }
-
-        val dbItem = SchemaDbItem(null, item.localizedName!!, item.internalName, fluid, item.cfg?.toInt())
-        val itemId = itemCache.computeIfAbsent(dbItem) { itemIdCounter++ }
-
-        return itemId to item.amount.toInt()
-    }
-
-    private fun loadItems(item: SchemaCTItem): Collection<Pair<Int, Int?>> {
-        if (item.internalName != null) {
-            val dbItem = SchemaDbItem(null, item.localizedName!!, item.internalName, false, null)
-            val itemId = itemCache.computeIfAbsent(dbItem) { itemIdCounter++ }
-
-            return listOf(itemId to item.amount!!.toInt())
-        }
-
-        return item.itemsMatching
-            ?.map { loadItem(it, false) }
-            ?: emptyList()
-    }
-
     private fun loadRecipe(machine: String, recipe: SchemaMachineRecipe) {
         val recipeId = recipeIdCounter++
-        recipes.add(Recipe(recipeId, machine, recipe.en, recipe.duration.toInt(), recipe.eut.toInt()))
+        recipes.add(Recipe(recipeId, machine, recipe.en, recipe.duration.toInt(), recipe.eut?.toInt()))
 
         var slot = 0
         recipe.inputFluid.forEach {
-            val (itemId, itemAmt) = loadItem(it, true)
-            recipeItems.add(RecipeItem(recipeId, itemId, slot++, itemAmt, false))
+            recipeItems.add(toRecipeItemArray(recipeId, it.id, null, slot++, it.amount, it.chance, false))
         }
         recipe.inputItems.forEach {
-            val (itemId, itemAmt) = loadItem(it, false)
-            recipeItems.add(RecipeItem(recipeId, itemId, slot++, itemAmt, false))
+            recipeItems.add(toRecipeItemArray(recipeId, it.id, null, slot++, it.amount, it.chance, false))
         }
 
         slot = 0
         recipe.outputFluid.forEach {
-            val (itemId, itemAmt) = loadItem(it, true)
-            recipeItems.add(RecipeItem(recipeId, itemId, slot++, itemAmt, true))
+            recipeItems.add(toRecipeItemArray(recipeId, it.id, null, slot++, it.amount, it.chance, true))
         }
         recipe.outputItems.forEach {
-            val (itemId, itemAmt) = loadItem(it, false)
-            recipeItems.add(RecipeItem(recipeId, itemId, slot++, itemAmt, true))
+            recipeItems.add(toRecipeItemArray(recipeId, it.id, null, slot++, it.amount, it.chance, true))
         }
     }
 
@@ -110,28 +91,34 @@ class SchemaImporter {
         val recipeId = recipeIdCounter++
         recipes.add(Recipe(recipeId, machine, true, null, null))
 
-        recipe.inputItems
+        (recipe.inputItems ?: listOf(recipe.inputItem!!))
             .withIndex()
             .filter { it.value != null }
             .forEach { (idx, item) ->
-                loadItems(item!!).forEach { (itemId, itemAmt) ->
-                    recipeItems.add(RecipeItem(recipeId, itemId, idx, itemAmt, false))
+                if (item!!.oreDictIds != null) {
+                    item.oreDictIds!!.forEach { oreDictId ->
+                        recipeItems.add(toRecipeItemArray(recipeId, null, oreDictId, idx, item.amount, null, false))
+                    }
+                } else {
+                    recipeItems.add(toRecipeItemArray(recipeId, item.id, null, idx, item.amount, null, false))
                 }
             }
 
-        val (itemId, itemAmt) = loadItem(recipe.output, false)
-        recipeItems.add(RecipeItem(recipeId, itemId, 0, itemAmt, true))
+        recipeItems.add(toRecipeItemArray(recipeId, recipe.output.id, null, 0, recipe.output.amount, null, true))
     }
 
     fun saveToDb() {
-        // apply item id to item pojos
-        itemCache.forEach { (item, id) ->
-            item.id = id
-        }
-
-        sqliteInterface.saveItems(itemCache.keys)
-        sqliteInterface.saveRecipes(recipes)
-        sqliteInterface.saveRecipeItems(recipeItems)
+        timeThis("saveRecipes") {sqliteInterface.saveRecipes(recipes)}
+        timeThis("saveRecipeItems") {sqliteInterface.saveRecipeItems(recipeItems)}
     }
 
+    private inline fun toRecipeItemArray(
+        recipeId: Int,
+        itemId: Int?,
+        oreDictId: Int?,
+        slot: Int,
+        amount: Int?,
+        chance: Int?,
+        isOutput: Boolean
+    ):Array<Any?> = arrayOf(recipeId, itemId, oreDictId, slot, amount, chance, isOutput)
 }

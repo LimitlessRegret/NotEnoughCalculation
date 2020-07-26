@@ -8,7 +8,9 @@ class DbRecipeItem(recipeItem: RecipeItem, item: Item?) {
     val slot = recipeItem.slot
     val amount = recipeItem.amount
     val isOutput = recipeItem.isOutput
+    val chance: Int? = recipeItem.chance
     val item = item
+    val oreDictId: Int? = recipeItem.oreDictId
 
     override fun toString(): String {
         return "DbRecipeItem(" +

@@ -200,8 +200,8 @@ class RecipeSearchView : Fragment("Recipe Search") {
             .forEach { (item, ingredients) ->
                 val totalAmount = ingredients.sumBy { it.amount }
                 sb.append("    ${totalAmount}x ${item?.localizedName}")
-                if (item?.config != null) {
-                    sb.append(" (${item.config})")
+                if (item?.damage != null) {
+                    sb.append(" (${item.damage})")
                 }
                 sb.appendLine()
             }

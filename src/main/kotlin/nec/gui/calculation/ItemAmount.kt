@@ -5,6 +5,7 @@ import javafx.beans.property.SimpleIntegerProperty
 import javafx.beans.property.SimpleObjectProperty
 import nec.RecipeDatabase
 import nec.gui.toIntLikeString
+import nec.isProgrammedCircuit
 import tornadofx.getValue
 import tornadofx.setValue
 import tornadofx.stringBinding
@@ -25,6 +26,6 @@ class ItemAmount(
 
     val displayProperty = amountProperty.stringBinding(itemIdProperty) {
         val name = item.localizedName
-        "${amount.toIntLikeString()}x $name" + (if (item?.config != null) " (${item.config})" else "")
+        "${amount.toIntLikeString()}x $name" + (if (item?.damage != null && item?.isProgrammedCircuit() == true) " (${item.damage})" else "")
     }
 }
