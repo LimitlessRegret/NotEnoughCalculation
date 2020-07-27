@@ -1,5 +1,6 @@
 package nec.solver
 
+import com.google.ortools.Loader
 import com.google.ortools.linearsolver.MPConstraint
 import com.google.ortools.linearsolver.MPSolver
 import com.google.ortools.linearsolver.MPVariable
@@ -7,7 +8,6 @@ import nec.dumpState
 import nec.gui.calculation.GroupItemAmount
 import nec.gui.calculation.RecipeGroup
 import nec.gui.calculation.RecipeSelection
-import nec.setNativeLibraryPath
 import org.slf4j.LoggerFactory
 
 class RecipeMPSolverWrapper {
@@ -276,8 +276,7 @@ class RecipeMPSolverWrapper {
         private val LOG = LoggerFactory.getLogger(RecipeMPSolverWrapper::class.java)
 
         init {
-            setNativeLibraryPath("./libs")
-            System.loadLibrary("jniortools")
+            Loader.loadNativeLibraries()
         }
 
         fun from(group: RecipeGroup): RecipeMPSolverWrapper {

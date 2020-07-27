@@ -21,15 +21,6 @@ inline fun <reified T : Any> timeThis(msg: String, debug: Boolean = false, cross
     return returnVal
 }
 
-fun setNativeLibraryPath(path: String) {
-    System.setProperty("java.library.path", path)
-
-    // ClassLoader caches this, so we'll clear it
-    val fieldSysPath = ClassLoader::class.java.getDeclaredField("sys_paths")
-    fieldSysPath.isAccessible = true
-    fieldSysPath.set(null, null)
-}
-
 fun MPSolver.dumpState(): String {
     val sb = StringBuilder()
     val variables = variables()

@@ -119,6 +119,5 @@ class MasterView : View() {
 
             }
         }
-        model.load(File("test.rg.json"))
     }
 }
