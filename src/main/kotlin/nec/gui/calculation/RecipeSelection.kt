@@ -2,6 +2,7 @@ package nec.gui.calculation
 
 import javafx.beans.binding.Bindings
 import javafx.beans.property.SimpleIntegerProperty
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import nec.RecipeDatabase
@@ -19,7 +20,12 @@ class RecipeSelection(
 
     @Transient
     val recipe = RecipeDatabase.instance.getRecipe(recipeId)
-    val slotOverrides = HashMap<Int, Int>().asObservable() // TODO
+
+    @SerialName("slotOverrides")
+    private val slotOverrides_backing = HashMap<Int, Int>()
+
+    @Transient
+    val slotOverrides = slotOverrides_backing.asObservable()
 
     @Transient
     val cachedSolutionProperty = SimpleIntegerProperty()
