@@ -1,11 +1,18 @@
 package nec.gui.calculation
 
 import javafx.beans.property.SimpleObjectProperty
-import kotlinx.serialization.*
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.Serializer
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.buildClassSerialDescriptor
+import kotlinx.serialization.encoding.CompositeDecoder
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonConfiguration
 import nec.dbmodel.DbRecipe
 import nec.solver.RecipeMPSolverWrapper
 import nec.solver.RecipeSolverSolution
@@ -49,9 +56,9 @@ class RecipeGroup : Controller() {
     }
 
     fun save(file: File) = file.writeText(save())
-    fun save() = Json(JsonConfiguration.Stable).stringify(serializer(), this)
+    fun save() = Json {}.encodeToString(serializer(), this)
     fun load(file: File) = load(file.readText())
-    fun load(data: String) = load(Json(JsonConfiguration.Stable).parse(serializer(), data))
+    fun load(data: String) = load(Json {}.decodeFromString(serializer(), data))
     fun load(other: RecipeGroup) {
         items.clear()
         recipes.clear()
@@ -99,7 +106,7 @@ class RecipeGroup : Controller() {
     companion object : KSerializer<RecipeGroup> {
         private val LOG = LoggerFactory.getLogger(RecipeGroup::class.java)
 
-        override val descriptor: SerialDescriptor = SerialDescriptor("RecipeGroup") {
+        override val descriptor: SerialDescriptor = buildClassSerialDescriptor("RecipeGroup") {
             element<Map<Int, RecipeSelection>>("recipes")
             element<Map<Int, GroupItemAmount>>("items")
         }
@@ -126,7 +133,7 @@ class RecipeGroup : Controller() {
             val dec: CompositeDecoder = decoder.beginStructure(descriptor)
             loop@ while (true) {
                 when (val i = dec.decodeElementIndex(descriptor)) {
-                    CompositeDecoder.READ_DONE -> break@loop
+                    CompositeDecoder.DECODE_DONE -> break@loop
                     0 -> rg.recipes.putAll(
                         dec.decodeSerializableElement(
                             descriptor,

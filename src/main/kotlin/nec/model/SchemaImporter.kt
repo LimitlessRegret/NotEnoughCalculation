@@ -1,7 +1,6 @@
 package nec.model
 
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonConfiguration
 import nec.dbmodel.SqliteInterface
 import nec.dbmodel.tables.pojos.Recipe
 import nec.timeThis
@@ -27,8 +26,8 @@ class SchemaImporter {
         }
 
         val model = timeThis("deserialize") {
-            val json = Json(JsonConfiguration.Stable)
-            json.parse(JsonDumpSchema.serializer(), jsonString)
+            val json = Json {}
+            json.decodeFromString(JsonDumpSchema.serializer(), jsonString)
         }
 
         load(model)

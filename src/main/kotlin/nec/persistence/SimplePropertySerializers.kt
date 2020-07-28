@@ -4,8 +4,11 @@ import javafx.beans.property.SimpleBooleanProperty
 import javafx.beans.property.SimpleDoubleProperty
 import javafx.beans.property.SimpleIntegerProperty
 import javafx.beans.value.WritableValue
-import kotlinx.serialization.*
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 
 open class SimplePropertySerializer<V : Any, K : WritableValue<*>>(
     val klass: Class<K>,
@@ -15,12 +18,12 @@ open class SimplePropertySerializer<V : Any, K : WritableValue<*>>(
 
     override fun deserialize(decoder: Decoder): K {
         val instance = klass.newInstance()
-        instance.value = decoder.decode(valueSerializer)
+        instance.value = decoder.decodeSerializableValue(valueSerializer)
         return instance
     }
 
     override fun serialize(encoder: Encoder, value: K) {
-        encoder.encode(valueSerializer, value.value as V)
+        encoder.encodeSerializableValue(valueSerializer, value.value as V)
     }
 }
 
