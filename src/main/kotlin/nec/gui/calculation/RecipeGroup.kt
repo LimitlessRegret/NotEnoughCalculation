@@ -53,9 +53,6 @@ class RecipeGroup : Controller() {
         solution.grossResults.forEach(items) { gia, amount ->
             gia.totalProducedAmount = amount
         }
-
-        val toRemove = items.values.filter { it.isZero }
-        println("toRemove= $toRemove")
     }
 
     fun save(file: File) = file.writeText(save())

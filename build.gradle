@@ -23,7 +23,7 @@ apply plugin: 'com.github.johnrengelman.shadow'
 
 mainClassName = 'nec.gui.NecApp'
 
-group 'org.example'
+group 'nec'
 version '1.0-SNAPSHOT'
 
 repositories {
