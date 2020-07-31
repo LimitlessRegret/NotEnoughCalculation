@@ -74,29 +74,13 @@ class RecipeMPSolverWrapper {
         have = gia.haveAmount
         infCost = gia.infiniteCost
         allowInfinite = gia.allowInfinite
-
-//        constraint.setLb(want)
-//        if (allowInfinite) {
-//            setItemInfinite(itemId, infCost)
-//        } else {
-//            removeItemInfinite(itemId)
-//        }
-//        if (have > 0) {
-//            setItemHave(itemId, have)
-//        } else {
-//            removeItemHave(itemId)
-//        }
     }
 
     fun solve(): MPSolver.ResultStatus {
         addMissingItems()
         setRecipeCoefficients()
 
-        val status = solver.solve()
-//        LOG.info("status=$status")
-
-//        LOG.info("Solution:\n${solutionString()}")
-        return status
+        return solver.solve()
     }
 
     fun getResults(): RecipeSolverSolution {
@@ -104,17 +88,14 @@ class RecipeMPSolverWrapper {
 
         val recipeCrafts = recipes.values
             .associate { it.recipe.id to it.variable.solutionValue() }
-//            .filterValues { it != 0.0 }
 
         val rawIngredients = infiniteItems
             .mapValues { it.value.solutionValue() }
-//            .filterValues { it != 0.0 }
 
         val grossIngredients = HashMap<Int, Double>()
         val grossResults = HashMap<Int, Double>()
         recipes.values.forEach {
             val crafts = it.variable.solutionValue()
-//            if (crafts == 0.0) return@forEach
 
             it.recipe.ingredients.forEach { (itemId, amount) ->
                 grossIngredients.compute(itemId) { _, cur -> (cur ?: 0.0) + amount * crafts }
