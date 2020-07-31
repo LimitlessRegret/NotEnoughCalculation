@@ -1,17 +1,9 @@
 package nec.gui.calculation
 
 import javafx.beans.property.SimpleObjectProperty
-import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.SerializationException
-import kotlinx.serialization.Serializer
-import kotlinx.serialization.builtins.MapSerializer
-import kotlinx.serialization.builtins.serializer
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.descriptors.buildClassSerialDescriptor
-import kotlinx.serialization.encoding.CompositeDecoder
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.Transient
 import kotlinx.serialization.json.Json
 import nec.dbmodel.DbRecipe
 import nec.solver.RecipeMPSolverWrapper
@@ -27,8 +19,19 @@ import java.io.File
 
 @Serializable
 class RecipeGroup : Controller() {
-    val recipes = HashMap<Int, RecipeSelection>().asObservable()
-    val items = HashMap<Int, GroupItemAmount>().asObservable()
+    @SerialName("recipes")
+    private val recipesBackingField = HashMap<Int, RecipeSelection>()
+
+    @Transient
+    val recipes = recipesBackingField.asObservable()
+
+    @SerialName("items")
+    val itemsBackingField = HashMap<Int, GroupItemAmount>()
+
+    @Transient
+    val items = itemsBackingField.asObservable()
+
+    @Transient
     val solutionProperty = SimpleObjectProperty<RecipeSolverSolution>()
     private var solution by solutionProperty
 
@@ -102,58 +105,8 @@ class RecipeGroup : Controller() {
         return graph
     }
 
-    @Serializer(forClass = RecipeGroup::class)
-    companion object : KSerializer<RecipeGroup> {
+    companion object {
         private val LOG = LoggerFactory.getLogger(RecipeGroup::class.java)
-
-        override val descriptor: SerialDescriptor = buildClassSerialDescriptor("RecipeGroup") {
-            element<Map<Int, RecipeSelection>>("recipes")
-            element<Map<Int, GroupItemAmount>>("items")
-        }
-
-        override fun serialize(encoder: Encoder, value: RecipeGroup) {
-            val compositeOutput = encoder.beginStructure(descriptor)
-            compositeOutput.encodeSerializableElement(
-                descriptor,
-                0,
-                MapSerializer(Int.serializer(), RecipeSelection.serializer()),
-                value.recipes
-            )
-            compositeOutput.encodeSerializableElement(
-                descriptor,
-                1,
-                MapSerializer(Int.serializer(), GroupItemAmount.serializer()),
-                value.items
-            )
-            compositeOutput.endStructure(descriptor)
-        }
-
-        override fun deserialize(decoder: Decoder): RecipeGroup {
-            val rg = RecipeGroup()
-            val dec: CompositeDecoder = decoder.beginStructure(descriptor)
-            loop@ while (true) {
-                when (val i = dec.decodeElementIndex(descriptor)) {
-                    CompositeDecoder.DECODE_DONE -> break@loop
-                    0 -> rg.recipes.putAll(
-                        dec.decodeSerializableElement(
-                            descriptor,
-                            i,
-                            MapSerializer(Int.serializer(), RecipeSelection.serializer())
-                        )
-                    )
-                    1 -> rg.items.putAll(
-                        dec.decodeSerializableElement(
-                            descriptor,
-                            i,
-                            MapSerializer(Int.serializer(), GroupItemAmount.serializer())
-                        )
-                    )
-                    else -> throw SerializationException("Unknown index $i")
-                }
-            }
-            dec.endStructure(descriptor)
-            return rg
-        }
     }
 }
 
