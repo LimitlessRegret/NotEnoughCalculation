@@ -71,12 +71,16 @@ class RecipeGroup : Controller() {
         if (existing != null) {
             LOG.warn("Recipe $recipeId already present!")
         }
+
+        updateItemList()
     }
 
     fun removeRecipe(recipeId: Int) {
         if (recipes.remove(recipeId) == null) {
             LOG.warn("Recipe $recipeId wasn't present!")
         }
+
+        updateItemList()
     }
 
     fun toRecipeGraph(): DefaultDirectedGraph<DbRecipe, DefaultEdge> {
@@ -108,6 +112,22 @@ class RecipeGroup : Controller() {
         solutionProperty.set(null)
     }
 
+    private fun updateItemList() {
+        val existingItems = items.keys.toSet()
+        val referencedItems = recipes.values
+            .flatMap {
+                (it.ingredientsProperty.get() + it.resultsProperty.get())
+                    .map { it.item.id }
+            }
+            .toSet()
+
+        val toRemove = existingItems - referencedItems
+        val toAdd = referencedItems - existingItems
+
+        toRemove.forEach { items.remove(it) }
+        toAdd.forEach { require(items.putIfAbsent(it, GroupItemAmount(it)) == null) }
+    }
+
     companion object {
         private val LOG = LoggerFactory.getLogger(RecipeGroup::class.java)
     }
@@ -115,7 +135,6 @@ class RecipeGroup : Controller() {
 
 private fun <V> Map<Int, V>.forEach(map: MutableMap<Int, GroupItemAmount>, block: (GroupItemAmount, V) -> Unit) {
     forEach { (itemId, amount) ->
-        val gia = map.computeIfAbsent(itemId) { GroupItemAmount(itemId) }
-        block(gia, amount)
+        block(map.getValue(itemId), amount)
     }
 }
