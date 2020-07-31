@@ -105,6 +105,12 @@ class RecipeGroup : Controller() {
         return graph
     }
 
+    fun reset() {
+        recipes.clear()
+        items.clear()
+        solutionProperty.set(null)
+    }
+
     companion object {
         private val LOG = LoggerFactory.getLogger(RecipeGroup::class.java)
     }

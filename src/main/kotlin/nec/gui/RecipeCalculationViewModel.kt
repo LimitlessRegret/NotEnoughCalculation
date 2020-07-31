@@ -115,4 +115,8 @@ class RecipeCalculationViewModel : ViewModel() {
         if (solveInhibited) return
         group.solve()
     }
+
+    fun reset() {
+        group.reset()
+    }
 }

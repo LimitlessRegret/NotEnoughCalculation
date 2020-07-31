@@ -30,6 +30,10 @@ class MasterView : View() {
                         find<RecipeSearchView>().openWindow(stageStyle = StageStyle.UNIFIED)
                     }
                     separator()
+                    item("Clear all").action {
+                        model.reset()
+                    }
+                    separator()
                     item("_Save", "Shortcut+s").action {
                         chooseFile("Save recipe group", stateFileFilter, null, FileChooserMode.Save)
                             .firstOrNull()
