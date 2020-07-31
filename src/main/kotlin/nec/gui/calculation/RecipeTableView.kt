@@ -18,6 +18,8 @@ class RecipeTableView : View() {
     private lateinit var resultColumns: List<TableColumn<RecipeSelection, ItemAmount?>>
 
     override val root = tableview(model.recipeItemsListProperty) {
+        smartResize()
+    
         column("Id", RecipeSelection::recipeIdProperty) {
             isVisible = appSettings.showInternalIds
             appSettings.showInternalIdsProperty.onChange { isVisible = it }
@@ -33,6 +35,7 @@ class RecipeTableView : View() {
                 it?.recipeCrafts?.get(cdf.value.recipe.id)?.toIntLikeString()
             }
         }
+        column("EU/t", RecipeSelection::euT)
 
         column("Machine") { cdf: TableColumn.CellDataFeatures<RecipeSelection, String> ->
             cdf.value.recipe.let { recipe ->
