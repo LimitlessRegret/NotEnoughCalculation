@@ -58,18 +58,12 @@ class SchemaImporter {
         recipes.add(toRecipeArray(recipeId, machine, recipe.en, recipe.duration.toInt(), recipe.eut?.toInt()))
 
         var slot = 0
-        recipe.inputFluid.forEach {
-            recipeItems.add(toRecipeItemArray(recipeId, it.id, null, slot++, it.amount, it.chance, false))
-        }
-        recipe.inputItems.forEach {
+        recipe.input.forEach {
             recipeItems.add(toRecipeItemArray(recipeId, it.id, null, slot++, it.amount, it.chance, false))
         }
 
         slot = 0
-        recipe.outputFluid.forEach {
-            recipeItems.add(toRecipeItemArray(recipeId, it.id, null, slot++, it.amount, it.chance, true))
-        }
-        recipe.outputItems.forEach {
+        recipe.output.forEach {
             recipeItems.add(toRecipeItemArray(recipeId, it.id, null, slot++, it.amount, it.chance, true))
         }
     }
@@ -78,7 +72,7 @@ class SchemaImporter {
         val recipeId = recipeIdCounter++
         recipes.add(toRecipeArray(recipeId, machine, true, null, null))
 
-        (recipe.inputItems ?: listOf(recipe.inputItem!!))
+        recipe.inputItems
             .withIndex()
             .filter { it.value != null }
             .forEach { (idx, item) ->
@@ -91,7 +85,11 @@ class SchemaImporter {
                 }
             }
 
-        recipeItems.add(toRecipeItemArray(recipeId, recipe.output.id, null, 0, recipe.output.amount, null, true))
+        recipe.output
+            .withIndex()
+            .forEach { (idx, item) ->
+                recipeItems.add(toRecipeItemArray(recipeId, item.id, null, idx, item.amount, null, true))
+            }
     }
 
     fun saveToDb() {

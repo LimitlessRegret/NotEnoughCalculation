@@ -55,14 +55,10 @@ data class SchemaMachineRecipe(
     val en: Boolean,
     @JsonAttribute(name = "dur")
     val duration: Long,
-    @JsonAttribute(name = "iI")
-    val inputItems: List<SchemaItemAmount>,
-    @JsonAttribute(name = "iO")
-    val outputItems: List<SchemaItemAmount>,
-    @JsonAttribute(name = "fI")
-    val inputFluid: List<SchemaItemAmount>,
-    @JsonAttribute(name = "fO")
-    val outputFluid: List<SchemaItemAmount>,
+    @JsonAttribute(name = "i")
+    val input: List<SchemaItemAmount>,
+    @JsonAttribute(name = "o")
+    val output: List<SchemaItemAmount>,
     @JsonAttribute(name = "eut")
     val eut: Long? = null,
     @JsonAttribute(name = "rft")
@@ -81,12 +77,10 @@ data class SchemaItemAmount(
 
 @CompiledJson
 data class SchemaRecipe(
-    @JsonAttribute(name = "o")
-    val output: SchemaItemAmount,
-    @JsonAttribute(name = "iI")
-    val inputItems: List<SchemaOreDictItemAmount?>? = null,
     @JsonAttribute(name = "i")
-    val inputItem: SchemaOreDictItemAmount? = null
+    val inputItems: List<SchemaOreDictItemAmount?>,
+    @JsonAttribute(name = "o")
+    val output: List<SchemaOreDictItemAmount>
 ) : ISchemaRecipe
 
 @CompiledJson
