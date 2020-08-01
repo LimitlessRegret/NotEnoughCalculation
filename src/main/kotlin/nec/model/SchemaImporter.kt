@@ -1,33 +1,22 @@
 package nec.model
 
-import kotlinx.serialization.json.Json
 import nec.dbmodel.SqliteInterface
-import nec.dbmodel.tables.pojos.Recipe
+import nec.dslJson
 import nec.timeThis
 import java.io.File
-
-data class SchemaDbItem(
-    var id: Int?,
-    val localizedName: String,
-    val internalName: String,
-    val isFluid: Boolean,
-    val damage: Int
-)
 
 class SchemaImporter {
     private val sqliteInterface = SqliteInterface("nec.db") // TODO
     private var recipeIdCounter = 1
-    private val recipes = ArrayList<Recipe>()
+    private val recipes = ArrayList<Array<Any?>>()
     private val recipeItems = ArrayList<Array<Any?>>()
 
     fun loadFile(filename: String) {
-        val jsonString = timeThis("load text") {
-            File(filename).readText()
-        }
-
-        val model = timeThis("deserialize") {
-            val json = Json {}
-            json.decodeFromString(JsonDumpSchema.serializer(), jsonString)
+        val model = timeThis("deserialize json") {
+            dslJson.deserialize(
+                JsonDumpSchema::class.java,
+                File(filename).inputStream()
+            )!!
         }
 
         load(model)
@@ -35,7 +24,7 @@ class SchemaImporter {
 
     fun load(model: JsonDumpSchema) {
         sqliteInterface.saveItems(model.items.map { item ->
-            SchemaDbItem(
+            arrayOf(
                 item.id,
                 item.localizedName ?: "[null]",
                 item.internalName ?: "[null]",
@@ -66,7 +55,7 @@ class SchemaImporter {
 
     private fun loadRecipe(machine: String, recipe: SchemaMachineRecipe) {
         val recipeId = recipeIdCounter++
-        recipes.add(Recipe(recipeId, machine, recipe.en, recipe.duration.toInt(), recipe.eut?.toInt()))
+        recipes.add(toRecipeArray(recipeId, machine, recipe.en, recipe.duration.toInt(), recipe.eut?.toInt()))
 
         var slot = 0
         recipe.inputFluid.forEach {
@@ -87,7 +76,7 @@ class SchemaImporter {
 
     private fun loadRecipe(machine: String, recipe: SchemaRecipe) {
         val recipeId = recipeIdCounter++
-        recipes.add(Recipe(recipeId, machine, true, null, null))
+        recipes.add(toRecipeArray(recipeId, machine, true, null, null))
 
         (recipe.inputItems ?: listOf(recipe.inputItem!!))
             .withIndex()
@@ -119,4 +108,12 @@ class SchemaImporter {
         chance: Int?,
         isOutput: Boolean
     ): Array<Any?> = arrayOf(recipeId, itemId, oreDictId, slot, amount, chance, isOutput)
+
+    private inline fun toRecipeArray(
+        id: Int,
+        source: String,
+        isEnabled: Boolean,
+        duration: Int?,
+        euT: Int?
+    ): Array<Any?> = arrayOf(id, source, isEnabled, duration, euT)
 }

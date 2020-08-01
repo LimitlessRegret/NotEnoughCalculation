@@ -2,22 +2,17 @@ package nec.dbmodel
 
 import nec.DbOreDictInfo
 import nec.dbmodel.Tables.*
-import nec.dbmodel.tables.pojos.*
-import nec.model.SchemaDbItem
+import nec.dbmodel.tables.pojos.Item
+import nec.dbmodel.tables.pojos.Recipe
+import nec.dbmodel.tables.pojos.RecipeItem
 import nec.timeThis
 import org.jooq.Record
 import org.jooq.SQLDialect
 import org.jooq.Table
-import org.jooq.TransactionalRunnable
 import org.jooq.impl.DSL
 import org.jooq.impl.DataSourceConnectionProvider
 import org.sqlite.SQLiteDataSource
-
-data class ItemDbKey(
-    val internalName: String,
-    val localizedName: String,
-    val config: Int?
-)
+import java.sql.Connection
 
 class SqliteInterface(database: String) {
     private val dslContext by lazy {
@@ -28,75 +23,69 @@ class SqliteInterface(database: String) {
         }), SQLDialect.SQLITE)
     }
 
-    fun saveItems(items: Collection<SchemaDbItem>) =
-        bulkInsert("saveItems", ITEM, items)
+    fun saveItems(items: Collection<Array<Any?>>) =
+        bulkInsertRaw("saveItems", ITEM, items)
 
     fun saveOreDictNames(oreDicts: Collection<Pair<String, Int>>) =
-        bulkInsert("saveOreDictNames", ORE_DICT_GROUP, oreDicts
-            .map { OreDictGroup(it.second, it.first) })
+        bulkInsertRaw("saveOreDictNames", ORE_DICT_GROUP, oreDicts
+            .map { arrayOf(it.second, it.first) })
 
     fun saveOreDictItems(oreDictItems: Collection<Pair<Int, Int>>) =
-        bulkInsert("saveOreDictItems", ORE_DICT_ITEM, oreDictItems
-            .map { OreDictItem(it.first, it.second) })
+        bulkInsertRaw("saveOreDictItems", ORE_DICT_ITEM, oreDictItems
+            .map { arrayOf(it.first, it.second) })
 
-    fun saveRecipes(recipeList: Collection<Recipe>) =
-        bulkInsert("saveRecipes", RECIPE, recipeList)
+    fun saveRecipes(recipeList: Collection<Array<Any?>>) =
+        bulkInsertRaw("saveRecipes", RECIPE, recipeList)
 
     fun saveRecipeItems(recipeItemList: Collection<Array<Any?>>) =
         bulkInsertRaw("saveRecipeItems", RECIPE_ITEM, recipeItemList)
 
-    private fun <T : Table<R>, R : Record, S : Any> bulkInsert(
-        logTag: String,
-        table: T,
-        items: Collection<S>
-    ) = dslContext.use { ctx ->
-        ctx.execute("PRAGMA journal_mode = OFF;")
-        ctx.execute("PRAGMA locking_mode = EXCLUSIVE;")
-        ctx.execute("PRAGMA synchronous = OFF;")
+    private fun withSqlTransaction(block: (conn: Connection) -> Unit) {
+        dslContext.connection { conn ->
+            val txStmnt = conn.createStatement()
+            txStmnt.execute("PRAGMA journal_mode = OFF;")
+            txStmnt.execute("PRAGMA locking_mode = EXCLUSIVE;")
+            txStmnt.execute("PRAGMA synchronous = OFF;")
 
-        ctx.transaction(TransactionalRunnable {
-            DSL.using(it).use { ctx ->
-                val records = timeThis("Prepare records") { items.map { ctx.newRecord(table, it) } }
+            txStmnt.execute("BEGIN TRANSACTION;")
+            block(conn)
+            txStmnt.execute("COMMIT TRANSACTION;")
 
-                val result = ctx.insertInto(table)
-                    .columns(*records.first().fields())
-                    .let { query ->
-                        timeThis("array map") {
-                            records.map { query.values(*it.intoArray()) }
-                                .last()
-                        }
-                    }
-                    .execute()
-
-                println("$logTag(${items.size}) = $result")
-            }
-        })
+            txStmnt.close()
+        }
     }
 
     private fun <T : Table<R>, R : Record> bulkInsertRaw(
         logTag: String,
         table: T,
         items: Collection<Array<Any?>>
-    ) = dslContext.use { ctx ->
-        ctx.execute("PRAGMA journal_mode = OFF;")
-        ctx.execute("PRAGMA locking_mode = EXCLUSIVE;")
-        ctx.execute("PRAGMA synchronous = OFF;")
+    ) = withSqlTransaction { conn ->
+        val fakeRecord = dslContext.newRecord(table).apply { changed(true) }
+        val fields = fakeRecord.fields()
+            .map { it.dataType.sqlDataType.sqlType }
+            .toIntArray()
+        val rawSql = dslContext.insertQuery(table).use { q ->
+            q.addRecord(fakeRecord)
+            q.sql
+        }
 
-        ctx.transaction(TransactionalRunnable {
-            DSL.using(it).use { ctx ->
-                val result = ctx.insertInto(table)
-                    .columns(*ctx.newRecord(table).fields())
-                    .let { query ->
-                        timeThis("array map") {
-                            items.map { query.values(*it) }
-                                .last()
-                        }
+        val stmt = conn.prepareStatement(rawSql)
+        timeThis("add batches", debug = true) {
+            items.forEach { item ->
+                fields.forEachIndexed { idx, field ->
+                    val value = item[idx]
+                    if (value == null) {
+                        stmt.setNull(idx + 1, field)
+                    } else {
+                        stmt.setObject(idx + 1, value, field)
                     }
-                    .execute()
-
-                println("$logTag(${items.size}) = $result")
+                }
+                stmt.addBatch()
             }
-        })
+        }
+
+        val result = timeThis("executeBatch", debug = true) { stmt.executeBatch() }
+        println("$logTag(${items.size}) = ${result.sum()}")
     }
 
     fun searchItems(query: String) = dslContext.use {

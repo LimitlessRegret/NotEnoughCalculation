@@ -24,6 +24,7 @@ static def getCommitHash() {
 
 apply plugin: 'application'
 apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'kotlin-kapt'
 
 mainClassName = 'nec.gui.NecApp'
 
@@ -54,6 +55,10 @@ dependencies {
 
     // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-serialization-runtime
     implementation group: 'org.jetbrains.kotlinx', name: 'kotlinx-serialization-runtime', version: '1.0-M1-1.4.0-rc'
+
+    // DSL-json
+    compile "com.dslplatform:dsl-json-java8:1.9.5"
+    kapt "com.dslplatform:dsl-json-java8:1.9.5"
 
     // db
     implementation group: 'org.xerial', name: 'sqlite-jdbc', version: '3.30.1'

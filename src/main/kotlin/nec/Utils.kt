@@ -1,11 +1,15 @@
 package nec
 
+import com.dslplatform.json.DslJson
+import com.dslplatform.json.runtime.Settings
 import com.google.ortools.linearsolver.MPSolver
 import nec.dbmodel.tables.pojos.Item
 import org.slf4j.LoggerFactory
 import kotlin.system.measureTimeMillis
 
 val _LOG = LoggerFactory.getLogger("Utils")
+
+val dslJson = DslJson(Settings.withRuntime<Any>().includeServiceLoader())
 
 inline fun <reified T : Any> timeThis(msg: String, debug: Boolean = false, crossinline block: () -> T): T {
     lateinit var returnVal: T

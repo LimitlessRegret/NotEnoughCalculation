@@ -1,101 +1,101 @@
 package nec.model
 
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
+import com.dslplatform.json.CompiledJson
+import com.dslplatform.json.JsonAttribute
 
 interface ISchemaRecipe
 
-@Serializable
+@CompiledJson
 data class JsonDumpSchema(
     val oreDict: List<SchemaOreDict>,
     val items: List<SchemaItem>,
     val sources: List<SchemaSource>
 )
 
-@Serializable
+@CompiledJson
 data class SchemaItem(
     val id: Int,
-    @SerialName("d")
+    @JsonAttribute(name = "d")
     val damage: Int,
-    @SerialName("f")
+    @JsonAttribute(name = "f")
     val isFluid: Boolean,
-    @SerialName("uN")
+    @JsonAttribute(name = "uN")
     val internalName: String? = null,
-    @SerialName("lN")
+    @JsonAttribute(name = "lN")
     val localizedName: String? = null
 )
 
-@Serializable
+@CompiledJson
 data class SchemaOreDict(
     val name: String,
     val ids: List<Int>
 )
 
-@Serializable
+@CompiledJson
 data class SchemaSource(
     val machines: List<SchemaMachine>? = null,
     val type: String? = null,
-    @SerialName("n")
+    @JsonAttribute(name = "n")
     val name: String? = null,
-    @SerialName("recs")
+    @JsonAttribute(name = "recs")
     val recipes: List<SchemaRecipe>? = null
 )
 
-@Serializable
+@CompiledJson
 data class SchemaMachine(
-    @SerialName("n")
+    @JsonAttribute(name = "n")
     val name: String,
-    @SerialName("recs")
+    @JsonAttribute(name = "recs")
     val recipes: List<SchemaMachineRecipe>
 )
 
-@Serializable
+@CompiledJson
 data class SchemaMachineRecipe(
-    @SerialName("en")
+    @JsonAttribute(name = "en")
     val en: Boolean,
-    @SerialName("dur")
+    @JsonAttribute(name = "dur")
     val duration: Long,
-    @SerialName("iI")
+    @JsonAttribute(name = "iI")
     val inputItems: List<SchemaItemAmount>,
-    @SerialName("iO")
+    @JsonAttribute(name = "iO")
     val outputItems: List<SchemaItemAmount>,
-    @SerialName("fI")
+    @JsonAttribute(name = "fI")
     val inputFluid: List<SchemaItemAmount>,
-    @SerialName("fO")
+    @JsonAttribute(name = "fO")
     val outputFluid: List<SchemaItemAmount>,
-    @SerialName("eut")
+    @JsonAttribute(name = "eut")
     val eut: Long? = null,
-    @SerialName("rft")
+    @JsonAttribute(name = "rft")
     val rft: Long? = null
 ) : ISchemaRecipe
 
-@Serializable
+@CompiledJson
 data class SchemaItemAmount(
-    @SerialName("a")
+    @JsonAttribute(name = "a")
     val amount: Int,
     val id: Int,
     val meta: String? = null,
-    @SerialName("c")
+    @JsonAttribute(name = "c")
     val chance: Int? = null
 )
 
-@Serializable
+@CompiledJson
 data class SchemaRecipe(
-    @SerialName("o")
+    @JsonAttribute(name = "o")
     val output: SchemaItemAmount,
-    @SerialName("iI")
+    @JsonAttribute(name = "iI")
     val inputItems: List<SchemaOreDictItemAmount?>? = null,
-    @SerialName("i")
+    @JsonAttribute(name = "i")
     val inputItem: SchemaOreDictItemAmount? = null
 ) : ISchemaRecipe
 
-@Serializable
+@CompiledJson
 data class SchemaOreDictItemAmount(
-    @SerialName("a")
+    @JsonAttribute(name = "a")
     val amount: Int? = null,
     val id: Int? = null,
-    @SerialName("ods")
+    @JsonAttribute(name = "ods")
     val oreDictIds: List<Int>? = null,
-    @SerialName("c")
+    @JsonAttribute(name = "c")
     val chance: Int? = null
 )
