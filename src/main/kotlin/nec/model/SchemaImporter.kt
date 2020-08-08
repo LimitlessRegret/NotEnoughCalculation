@@ -58,9 +58,11 @@ class SchemaImporter {
         recipes.add(toRecipeArray(recipeId, machine, recipe.en, recipe.duration.toInt(), recipe.eut?.toInt()))
 
         var slot = 0
-        recipe.input.forEach {
-            recipeItems.add(toRecipeItemArray(recipeId, it.id, null, slot++, it.amount, it.chance, false))
-        }
+        recipe.input
+            .filterNotNull()
+            .forEach {
+                recipeItems.add(toRecipeItemArray(recipeId, it.id, null, slot++, it.amount, it.chance, false))
+            }
 
         slot = 0
         recipe.output.forEach {

@@ -56,7 +56,7 @@ data class SchemaMachineRecipe(
     @JsonAttribute(name = "dur")
     val duration: Long,
     @JsonAttribute(name = "i")
-    val input: List<SchemaItemAmount>,
+    val input: List<SchemaItemAmount?>,
     @JsonAttribute(name = "o")
     val output: List<SchemaItemAmount>,
     @JsonAttribute(name = "eut")
