@@ -132,13 +132,20 @@ class SqliteInterface(database: String) {
             .fetch { DbOreDictInfo(it.id, it.name, groupItems[it.id] ?: intArrayOf()) }
     }
 
-    fun findRecipeByItem(itemIds: Collection<Int>, isOutput: Boolean? = null) = dslContext.use {
+    fun findRecipeByItem(
+        itemIds: Collection<Int>,
+        oreDictIds: Collection<Int>,
+        isOutput: Boolean? = null
+    ) = dslContext.use {
         it
             .selectDistinct(RECIPE.asterisk())
             .from(RECIPE_ITEM)
             .innerJoin(RECIPE)
             .on(RECIPE_ITEM.RECIPE_ID.eq(RECIPE.ID))
-            .where(RECIPE_ITEM.ITEM_ID.`in`(itemIds))
+            .where(
+                RECIPE_ITEM.ITEM_ID.`in`(itemIds)
+                    .or(RECIPE_ITEM.ORE_DICT_ID.`in`(oreDictIds))
+            )
             .and(
                 when (isOutput) {
                     true -> RECIPE_ITEM.IS_OUTPUT.isTrue
@@ -155,5 +162,13 @@ class SqliteInterface(database: String) {
             .selectFrom(RECIPE)
             .where(RECIPE.ID.eq(recipeId))
             .fetchOneInto(Recipe::class.java)
+    }
+
+    fun getOreDictsFor(itemIds: Collection<Int>): Collection<Int> = dslContext.use {
+        it
+            .select(ORE_DICT_ITEM.ORE_DICT_ID)
+            .from(ORE_DICT_ITEM)
+            .where(ORE_DICT_ITEM.ITEM_ID.`in`(itemIds))
+            .fetch { it.component1() }
     }
 }

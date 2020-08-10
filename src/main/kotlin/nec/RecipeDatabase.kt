@@ -47,13 +47,13 @@ class RecipeDatabase {
         findRecipeByIngredient(listOf(itemId))
 
     fun findRecipeByIngredient(itemIds: Collection<Int>) =
-        findRecipeByItem(itemIds, isOutput = false)
+        findRecipeByItem(itemIds, sqliteInterface.getOreDictsFor(itemIds), isOutput = false)
 
     fun findRecipeByResult(itemId: Int) =
         findRecipeByResult(listOf(itemId))
 
     fun findRecipeByResult(itemIds: Collection<Int>) =
-        findRecipeByItem(itemIds, isOutput = true)
+        findRecipeByItem(itemIds, sqliteInterface.getOreDictsFor(itemIds), isOutput = true)
 
     fun getRecipe(recipeId: Int): DbRecipe {
         return recipeCache[recipeId]
@@ -61,8 +61,12 @@ class RecipeDatabase {
                 .first()
     }
 
-    private fun findRecipeByItem(itemIds: Collection<Int>, isOutput: Boolean?): Collection<DbRecipe> {
-        val recipes = sqliteInterface.findRecipeByItem(itemIds, isOutput)
+    private fun findRecipeByItem(
+        itemIds: Collection<Int>,
+        oreDictIds: Collection<Int>,
+        isOutput: Boolean?
+    ): Collection<DbRecipe> {
+        val recipes = sqliteInterface.findRecipeByItem(itemIds, oreDictIds, isOutput)
 
         return loadRecipes(recipes)
     }
