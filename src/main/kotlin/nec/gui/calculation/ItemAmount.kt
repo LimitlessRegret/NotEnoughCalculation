@@ -14,6 +14,7 @@ class ItemAmount(
     itemId: Int,
     amount: Double,
     val isIngredient: Boolean,
+    val oreDictSlot: Int? = null
 ) {
     val itemIdProperty = SimpleIntegerProperty(itemId)
     var itemId by itemIdProperty

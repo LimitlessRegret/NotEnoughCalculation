@@ -50,7 +50,7 @@ class RecipeCalculationViewModel : ViewModel() {
             val recipeItem = itemsProperty.get()?.getOrNull(index) ?: return@objectBinding null
             val itemId = recipeItem.item.id ?: return@objectBinding null
 
-            ItemAmount(itemId, recipeItem.amount.times(crafts), isIngredient)
+            ItemAmount(itemId, recipeItem.amount.times(crafts), isIngredient, oreDictSlot = recipeItem.oreDictSlot)
         }
     }
 

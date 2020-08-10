@@ -19,7 +19,7 @@ class RecipeTableView : View() {
 
     override val root = tableview(model.recipeItemsListProperty) {
         smartResize()
-    
+
         column("Id", RecipeSelection::recipeIdProperty) {
             isVisible = appSettings.showInternalIds
             appSettings.showInternalIdsProperty.onChange { isVisible = it }
@@ -109,6 +109,32 @@ class RecipeTableView : View() {
                     }
                 )
                 cellFormat {
+                    setDefaultTableCellStyles()
+
+                    if (item == null) {
+                        graphic = null
+                        return@cellFormat
+                    }
+
+                    graphic = cache(item!!) {
+                        anchorpane {
+                            polygon(7, 0, 7, 7, 0, 7) {
+                                anchorpaneConstraints {
+                                    // this aligns with the colored background, but not with the row itself
+                                    this.bottomAnchor = -4
+                                    this.rightAnchor = -2
+                                }
+                                visibleWhen { itemProperty().booleanBinding { it?.oreDictSlot != null } }
+                            }
+                            text(item!!.displayProperty) {
+                                anchorpaneConstraints {
+                                    this.leftAnchor = 0
+                                    this.topAnchor = 2
+                                    this.rightAnchor = 0
+                                }
+                            }
+                        }
+                    }
                     itemProperty().onChange {
                         if (it == null) {
                             removeClass(Styles.itemRawInput, Styles.itemOutput)
@@ -116,9 +142,7 @@ class RecipeTableView : View() {
                             backgroundProperty().set(null)
                         }
                     }
-                    setDefaultTableCellStyles()
                     removeClass(Styles.itemRawInput, Styles.itemOutput)
-                    text = item?.displayProperty?.get()
                     model.group.items[item?.itemId]?.let { groupItem ->
                         if (!isIngredient && groupItem.wantAmount > 0) {
                             addClass(Styles.itemOutput)

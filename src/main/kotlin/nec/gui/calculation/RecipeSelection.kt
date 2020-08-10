@@ -47,7 +47,7 @@ class RecipeSelection(
                     ?: return@flatMapIndexed emptyList()
             }
 
-            listOf(RecipeItemAmount(item, odi.amount, null))
+            listOf(RecipeItemAmount(item, odi.amount, null, oreDictSlot = idx))
         }
     }, slotOverrides)
 
