@@ -13,7 +13,7 @@ import nec.solver.RecipeMPSolverWrapper
 import tornadofx.*
 
 
-class MasterView : View() {
+class MasterView : View("Not Enough Calculation") {
     private val model: RecipeCalculationViewModel by inject()
     private val appSettings: AppSettings by inject()
     private val recipeTableView: RecipeTableView by inject()
