@@ -44,6 +44,19 @@ class SqliteInterface(database: String) {
     fun saveRecipeItems(recipeItemList: Collection<Array<Any?>>) =
         bulkInsertRaw("saveRecipeItems", RECIPE_ITEM, recipeItemList)
 
+    fun saveMetadata(key: String, value: String) = dslContext.use {
+        it.insertQuery(METADATA).apply {
+            addRecord(it.newRecord(METADATA)
+                .apply {
+                    this.key = key
+                    this.value = value
+                })
+            onDuplicateKeyUpdate(true)
+            addValueForUpdate(METADATA.VALUE, value)
+            execute()
+        }
+    }
+
     private fun withSqlTransaction(block: (conn: Connection) -> Unit) {
         dslContext.connection { conn ->
             val txStmnt = conn.createStatement()

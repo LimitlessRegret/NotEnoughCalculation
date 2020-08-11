@@ -4,6 +4,8 @@ import nec.dbmodel.SqliteInterface
 import nec.dslJson
 import nec.timeThis
 import java.io.File
+import java.nio.ByteBuffer
+import javax.xml.bind.DatatypeConverter
 
 class SchemaImporter {
     private val sqliteInterface = SqliteInterface("nec.db") // TODO
@@ -25,6 +27,11 @@ class SchemaImporter {
     }
 
     fun load(model: JsonDumpSchema) {
+        val hash = DatatypeConverter.printHexBinary(
+            ByteBuffer.allocate(Integer.BYTES).putInt(model.hashCode()).array()
+        )
+        sqliteInterface.saveMetadata("hash", hash)
+
         sqliteInterface.saveItems(model.items.map { item ->
             arrayOf(
                 item.id,
