@@ -10,6 +10,8 @@ class SchemaImporter {
     private var recipeIdCounter = 1
     private val recipes = ArrayList<Array<Any?>>()
     private val recipeItems = ArrayList<Array<Any?>>()
+    private var modIdCounter = 1
+    private val modMap = HashMap<String, Int>()
 
     fun loadFile(filename: String) {
         val model = timeThis("deserialize json") {
@@ -29,9 +31,11 @@ class SchemaImporter {
                 item.localizedName ?: "[null]",
                 item.internalName ?: "[null]",
                 item.isFluid,
-                item.damage
+                item.damage,
+                item.mod?.let { modMap.computeIfAbsent(it) { recipeIdCounter++ } }
             )
         })
+        sqliteInterface.saveModNames(modMap.map { it.toPair() })
         sqliteInterface.saveOreDictNames(model.oreDict.mapIndexed { idx, oreDict -> oreDict.name to idx })
         sqliteInterface.saveOreDictItems(model.oreDict.flatMapIndexed { idx, oreDict ->
             oreDict.ids.map { idx to it }

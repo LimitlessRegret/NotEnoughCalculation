@@ -38,6 +38,7 @@ class RecipeDatabase {
     private val itemCache = HashMap<Int, Item>()
     private val recipeCache = HashMap<Int, DbRecipe>()
     private val oreDictCache = HashMap<Int, DbOreDictInfo>()
+    val modIdCache by lazy { sqliteInterface.getAllMods() }
 
     fun lookupByLocalizedName(query: String): Collection<Int> {
         return sqliteInterface.searchItems(query)

@@ -30,6 +30,10 @@ class SqliteInterface(database: String) {
         bulkInsertRaw("saveOreDictNames", ORE_DICT_GROUP, oreDicts
             .map { arrayOf(it.second, it.first) })
 
+    fun saveModNames(mods: Collection<Pair<String, Int>>) =
+        bulkInsertRaw("saveModNames", MOD, mods
+            .map { arrayOf(it.second, it.first) })
+
     fun saveOreDictItems(oreDictItems: Collection<Pair<Int, Int>>) =
         bulkInsertRaw("saveOreDictItems", ORE_DICT_ITEM, oreDictItems
             .map { arrayOf(it.first, it.second) })
@@ -103,6 +107,12 @@ class SqliteInterface(database: String) {
             .where(ITEM.LOCALIZED_NAME.like(sb.toString()))
 //            .or(ITEM.INTERNAL_NAME.like("%$query%"))
             .fetch { it.component1() }
+    }
+
+    fun getAllMods() = dslContext.use {
+        it
+            .selectFrom(MOD)
+            .associate { it.component1() to it.component2() }
     }
 
     fun getRecipeItems(recipeIds: Collection<Int>) = dslContext.use {

@@ -22,7 +22,9 @@ data class SchemaItem(
     @JsonAttribute(name = "uN")
     val internalName: String? = null,
     @JsonAttribute(name = "lN")
-    val localizedName: String? = null
+    val localizedName: String? = null,
+    @JsonAttribute(name = "m")
+    val mod: String? = null
 )
 
 @CompiledJson
