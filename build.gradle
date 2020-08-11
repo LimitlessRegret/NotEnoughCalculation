@@ -29,7 +29,7 @@ apply plugin: 'kotlin-kapt'
 mainClassName = 'nec.gui.NecApp'
 
 group 'nec'
-version "0.2.0-${getCommitHash()}"
+version "0.3.0-${getCommitHash()}"
 
 repositories {
     maven { url 'https://dl.bintray.com/kotlin/kotlin-eap' }
