@@ -2,6 +2,7 @@ package nec.gui
 
 
 import javafx.stage.Stage
+import org.flywaydb.core.Flyway
 import tornadofx.App
 import tornadofx.find
 import tornadofx.launch
@@ -20,7 +21,17 @@ class NecApp : App(MasterView::class, Styles::class) {
     companion object {
         @JvmStatic
         fun main(args: Array<String>) {
+            migrateDb()
+
             launch<NecApp>(args)
+        }
+
+        private fun migrateDb() {
+            Flyway
+                .configure()
+                .dataSource("jdbc:sqlite:nec.db", "", "")
+                .load()
+                .migrate()
         }
     }
 }
