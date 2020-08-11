@@ -23,7 +23,8 @@ data class RecipeOreDictItemAmount(
 data class RecipeItemAmount(
     val item: Item,
     val amount: Int,
-    val chance: Int?
+    val chance: Int?,
+    val oreDictSlot: Int? = null,
 )
 
 typealias OreDictSet = Collection<Int>

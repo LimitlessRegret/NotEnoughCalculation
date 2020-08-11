@@ -1,7 +1,5 @@
 package nec.gui.recipe
 
-import com.sun.javafx.scene.control.skin.ListViewSkin
-import com.sun.javafx.scene.control.skin.VirtualFlow
 import javafx.geometry.Insets
 import javafx.geometry.Orientation
 import javafx.geometry.Pos
@@ -11,6 +9,7 @@ import nec.dbmodel.DbRecipe
 import nec.gui.RecipeCalculationViewModel
 import nec.gui.activateOn
 import nec.gui.recipe.ItemSearchMode.*
+import nec.gui.scrollSelectionWithWheel
 import nec.isProgrammedCircuit
 import tornadofx.*
 
@@ -79,34 +78,7 @@ class RecipeSearchView : Fragment("Recipe Search") {
                 splitpaneConstraints {
                     isResizableWithParent = false
                 }
-                addEventFilter(ScrollEvent.SCROLL) {
-                    if (it.deltaY < 0) {
-                        model.selectMachine(1)
-                    } else {
-                        model.selectMachine(-1)
-                    }
-                    it.consume()
-                }
-
-                bindSelected(model.selectedMachineProperty)
-                model.selectedMachineProperty.onChange {
-                    selectionModel.select(it)
-
-                    val ts = skin as ListViewSkin<*>
-                    val vf = ts.children[0] as VirtualFlow<*>
-
-                    val priorSelection = selectionModel.selectedIndices.firstOrNull() ?: 0
-                    val itemIndex = items.indexOf(it)
-
-                    val scrollBufferSpace = 3
-                    if (itemIndex < scrollBufferSpace || itemIndex >= items.size - scrollBufferSpace) {
-                        /* Do nothing */
-                    } else if (itemIndex > priorSelection) {
-                        vf.show(itemIndex + scrollBufferSpace)
-                    } else {
-                        vf.show(itemIndex - scrollBufferSpace)
-                    }
-                }
+                scrollSelectionWithWheel(model.selectedMachineProperty)
 
                 cellFormat {
                     text = "${item.machine} (${item.recipes.size})"

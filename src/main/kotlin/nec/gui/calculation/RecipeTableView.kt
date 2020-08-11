@@ -3,6 +3,7 @@ package nec.gui.calculation
 import javafx.scene.control.TableColumn
 import javafx.scene.control.TableView
 import javafx.scene.input.KeyCode
+import javafx.scene.input.MouseEvent
 import javafx.scene.text.Font
 import javafx.scene.text.FontSmoothingType
 import javafx.stage.StageStyle
@@ -58,7 +59,7 @@ class RecipeTableView : View() {
                 recipe == null -> return@setOnMouseClicked
                 it.clickCount == 2 -> return@setOnMouseClicked onDoubleClick(recipe, itemAmount)
                 it.clickCount == 1 -> return@setOnMouseClicked if (itemAmount != null) {
-                    onRecipeItemClick(recipe, itemAmount)
+                    onRecipeItemClick(it, recipe, itemAmount)
                 } else {
                     onRecipeRowClick(recipe)
                 }
@@ -72,6 +73,25 @@ class RecipeTableView : View() {
                 model.removeRecipe(selected.recipeId)
             }
         }
+        setOnMousePressed(::highlightItems)
+    }
+
+    private fun highlightItems(event: MouseEvent) =
+        highlightItems(event.findItem<RecipeSelection>(), event.findItem<ItemAmount>())
+
+    private fun highlightItems(
+        selection: RecipeSelection?,
+        itemAmount: ItemAmount?
+    ) {
+        model.itemHighlights.onlyHighlight(
+            when {
+                itemAmount != null -> listOf(itemAmount.itemId)
+                selection != null -> (selection.ingredientsProperty.get().map { it.item.id } +
+                        selection.recipe.results.map { it.item.id })
+                    .filterNotNull()
+                else -> emptyList()
+            }
+        )
     }
 
     private fun onDoubleClick(recipe: RecipeSelection, itemAmount: ItemAmount?) {
@@ -83,16 +103,12 @@ class RecipeTableView : View() {
         ).openWindow(stageStyle = StageStyle.UNIFIED)
     }
 
-    private fun onRecipeItemClick(recipe: RecipeSelection, itemAmount: ItemAmount) {
-        model.itemHighlights.onlyHighlight(listOf(itemAmount.itemId))
+    private fun onRecipeItemClick(event: MouseEvent, selection: RecipeSelection, itemAmount: ItemAmount) {
+        highlightItems(selection, itemAmount)
     }
 
     private fun onRecipeRowClick(recipe: RecipeSelection) {
-        model.itemHighlights.onlyHighlight(
-            (recipe.ingredientsProperty.get().map { it.item.id } +
-                    recipe.recipe.results.map { it.item.id })
-                .filterNotNull()
-        )
+        highlightItems(recipe, null)
     }
 
     private fun TableView<RecipeSelection>.addItemColumns(isIngredient: Boolean): List<TableColumn<RecipeSelection, ItemAmount?>> {
