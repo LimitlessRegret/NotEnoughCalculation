@@ -3,11 +3,13 @@ package nec.gui.calculation
 import javafx.scene.control.TableColumn
 import javafx.scene.control.TableView
 import javafx.scene.input.KeyCode
+import javafx.scene.input.MouseButton
 import javafx.scene.input.MouseEvent
 import javafx.scene.text.Font
 import javafx.scene.text.FontSmoothingType
 import javafx.stage.StageStyle
 import nec.gui.*
+import nec.gui.oredict.OreDictChoiceView
 import nec.gui.recipe.ItemSearchMode
 import nec.gui.recipe.RecipeSearchView
 import tornadofx.*
@@ -105,6 +107,21 @@ class RecipeTableView : View() {
 
     private fun onRecipeItemClick(event: MouseEvent, selection: RecipeSelection, itemAmount: ItemAmount) {
         highlightItems(selection, itemAmount)
+
+        if (event.button == MouseButton.SECONDARY &&
+            itemAmount.oreDictSlot != null &&
+            selection.recipe.uniqueOreDictItemsInSlot(itemAmount.oreDictSlot).size > 1
+        ) {
+            val oreDicts = selection.recipe.oreDictIngredients[itemAmount.oreDictSlot]
+                .oreDicts
+                .map { it.id }
+
+            find<OreDictChoiceView>(
+                "oreDicts" to oreDicts,
+                "forRecipeId" to selection.recipeId,
+                "forOreSlot" to itemAmount.oreDictSlot,
+            ).openWindow(stageStyle = StageStyle.UNIFIED)
+        }
     }
 
     private fun onRecipeRowClick(recipe: RecipeSelection) {
@@ -134,13 +151,23 @@ class RecipeTableView : View() {
 
                     graphic = cache(item!!) {
                         anchorpane {
-                            polygon(7, 0, 7, 7, 0, 7) {
+                            polygon(9, 0, 9, 9, 0, 9) {
                                 anchorpaneConstraints {
                                     // this aligns with the colored background, but not with the row itself
                                     this.bottomAnchor = -4
                                     this.rightAnchor = -2
                                 }
-                                visibleWhen { itemProperty().booleanBinding { it?.oreDictSlot != null } }
+                                visibleWhen {
+                                    itemProperty().booleanBinding {
+                                        it?.oreDictSlot?.let { slot ->
+                                            this@cellFormat
+                                                .rowItem
+                                                .recipe
+                                                .uniqueOreDictItemsInSlot(slot)
+                                                .size > 1
+                                        } ?: false
+                                    }
+                                }
                             }
                             text(item!!.displayProperty) {
                                 anchorpaneConstraints {

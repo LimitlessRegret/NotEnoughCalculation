@@ -64,6 +64,8 @@ class RecipeGroup : Controller() {
         recipes.clear()
         recipes.putAll(other.recipes)
         items.putAll(other.items)
+
+        updateItemList()
     }
 
     fun addRecipe(recipeId: Int) {
@@ -81,6 +83,15 @@ class RecipeGroup : Controller() {
         }
 
         updateItemList()
+    }
+
+    fun setOreSlotOverride(recipeId: Int, oreDictSlot: Int, itemId: Int) {
+        recipes[recipeId]
+            ?.slotOverrides?.put(oreDictSlot, itemId)
+            ?: LOG.warn("Tried to set override for recipe $recipeId which isn't present")
+
+        updateItemList()
+        solve()
     }
 
     fun toRecipeGraph(): DefaultDirectedGraph<DbRecipe, DefaultEdge> {

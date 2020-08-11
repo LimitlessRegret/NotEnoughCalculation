@@ -92,7 +92,7 @@ class SqliteInterface(database: String) {
         println("$logTag(${items.size}) = ${result.sum()}")
     }
 
-    fun searchItems(query: String) = dslContext.use {
+    fun searchItems(query: String, itemIds: Set<Int>? = null) = dslContext.use {
         val leadingWild = !query.startsWith('"')
         val trailingWild = !query.endsWith('"')
 
@@ -104,7 +104,8 @@ class SqliteInterface(database: String) {
         it
             .select(ITEM.ID)
             .from(ITEM)
-            .where(ITEM.LOCALIZED_NAME.like(sb.toString()))
+            .where(itemIds?.let { ITEM.ID.`in`(it) } ?: DSL.noCondition())
+            .and(ITEM.LOCALIZED_NAME.like(sb.toString()))
 //            .or(ITEM.INTERNAL_NAME.like("%$query%"))
             .fetch { it.component1() }
     }
@@ -174,7 +175,7 @@ class SqliteInterface(database: String) {
             .fetchOneInto(Recipe::class.java)
     }
 
-    fun getOreDictsFor(itemIds: Collection<Int>): Collection<Int> = dslContext.use {
+    fun getOreDictsFor(itemIds: Collection<Int>): List<Int> = dslContext.use {
         it
             .select(ORE_DICT_ITEM.ORE_DICT_ID)
             .from(ORE_DICT_ITEM)

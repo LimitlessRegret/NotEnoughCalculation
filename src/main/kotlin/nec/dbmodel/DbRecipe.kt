@@ -18,6 +18,11 @@ class DbRecipe(
     val duration = recipe.duration
     val euT = recipe.euT
 
+    fun uniqueOreDictItemsInSlot(slot: Int) = oreDictIngredients[slot]
+        .oreDicts
+        .flatMap { it.itemsIds.asList() }
+        .toSet()
+
     override fun toString(): String {
         return "DbRecipe(" +
                 "id=$id, " +

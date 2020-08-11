@@ -13,6 +13,7 @@ data class DbOreDictInfo(
     val itemsIds: IntArray,
 ) {
     lateinit var items: Array<Item>
+    val itemsIsInitialized get() = ::items.isInitialized
 }
 
 data class RecipeOreDictItemAmount(
@@ -41,8 +42,8 @@ class RecipeDatabase {
     private val oreDictCache = HashMap<Int, DbOreDictInfo>()
     val modIdCache by lazy { sqliteInterface.getAllMods() }
 
-    fun lookupByLocalizedName(query: String): Collection<Int> {
-        return sqliteInterface.searchItems(query)
+    fun lookupByLocalizedName(query: String, itemIds: Set<Int>? = null): Collection<Int> {
+        return sqliteInterface.searchItems(query, itemIds)
     }
 
     fun findRecipeByIngredient(itemId: Int) =
@@ -91,10 +92,12 @@ class RecipeDatabase {
         referencedOreDicts
             .mapNotNull { oreDictCache[it] }
             .forEach {
-                it.items = it.itemsIds
-                    .map { itemCache[it] }
-                    .filterNotNull()
-                    .toTypedArray()
+                if (!it.itemsIsInitialized) {
+                    it.items = it.itemsIds
+                        .map { itemCache[it] }
+                        .filterNotNull()
+                        .toTypedArray()
+                }
             }
 
         val missed = cacheMiss.map { recipe ->
@@ -187,5 +190,24 @@ class RecipeDatabase {
         ensureItemsLoaded(listOf(itemId))
 
         return itemCache.getValue(itemId)
+    }
+
+    fun getOreDicts(oreDicts: Collection<Int>, loadItems: Boolean = false): List<DbOreDictInfo> {
+        ensureOreDictsLoaded(oreDicts)
+
+        return oreDicts.map(oreDictCache::getValue).also {
+            if (loadItems) {
+                ensureItemsLoaded(it.flatMap { it.itemsIds.toList() })
+
+                it
+                    .filter { !it.itemsIsInitialized }
+                    .forEach {
+                        it.items = it.itemsIds
+                            .map { itemCache[it] }
+                            .filterNotNull()
+                            .toTypedArray()
+                    }
+            }
+        }
     }
 }

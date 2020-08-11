@@ -7,6 +7,7 @@ import nec.gui.calculation.ItemAmount
 import nec.gui.calculation.RecipeGroup
 import nec.gui.calculation.RecipeSelection
 import org.jgrapht.alg.scoring.PageRank
+import org.slf4j.LoggerFactory
 import tornadofx.*
 import java.io.File
 
@@ -119,4 +120,7 @@ class RecipeCalculationViewModel : ViewModel() {
     fun reset() {
         group.reset()
     }
+
+    fun setOreSlotOverride(recipeId: Int, oreDictSlot: Int, itemId: Int) =
+        group.setOreSlotOverride(recipeId, oreDictSlot, itemId)
 }
