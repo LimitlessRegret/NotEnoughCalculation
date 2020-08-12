@@ -39,7 +39,7 @@ class SchemaImporter {
                 item.internalName ?: "[null]",
                 item.isFluid,
                 item.damage,
-                item.mod?.let { modMap.computeIfAbsent(it) { recipeIdCounter++ } }
+                item.mod?.let { modMap.computeIfAbsent(it) { modIdCounter++ } }
             )
         })
         sqliteInterface.saveModNames(modMap.map { it.toPair() })
