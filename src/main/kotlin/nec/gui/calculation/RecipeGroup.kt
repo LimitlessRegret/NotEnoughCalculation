@@ -86,9 +86,9 @@ class RecipeGroup : Controller() {
     }
 
     fun setOreSlotOverride(recipeId: Int, oreDictSlot: Int, itemId: Int) {
-        recipes[recipeId]
-            ?.slotOverrides?.put(oreDictSlot, itemId)
-            ?: LOG.warn("Tried to set override for recipe $recipeId which isn't present")
+        recipes[recipeId]?.also {
+            it.slotOverrides[oreDictSlot] = itemId
+        } ?: LOG.warn("Tried to set override for recipe $recipeId which isn't present")
 
         updateItemList()
         solve()
