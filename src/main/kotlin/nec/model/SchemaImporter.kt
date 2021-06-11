@@ -108,6 +108,7 @@ class SchemaImporter {
     fun saveToDb() {
         timeThis("saveRecipes") { sqliteInterface.saveRecipes(recipes) }
         timeThis("saveRecipeItems") { sqliteInterface.saveRecipeItems(recipeItems) }
+        sqliteInterface.vacuum()
     }
 
     private inline fun toRecipeItemArray(

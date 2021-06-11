@@ -195,4 +195,6 @@ class SqliteInterface(database: String) {
             .where(ORE_DICT_ITEM.ITEM_ID.`in`(itemIds))
             .fetch { it.component1() }
     }
+
+    fun vacuum() = dslContext.execute("VACUUM")
 }
