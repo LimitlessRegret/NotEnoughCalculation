@@ -5,7 +5,6 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import kotlinx.serialization.json.Json
-import nec.dbmodel.DbRecipe
 import nec.solver.RecipeMPSolverWrapper
 import nec.solver.RecipeSolverSolution
 import org.jgrapht.graph.DefaultDirectedGraph
@@ -94,15 +93,15 @@ class RecipeGroup : Controller() {
         solve()
     }
 
-    fun toRecipeGraph(): DefaultDirectedGraph<DbRecipe, DefaultEdge> {
-        val graph = DefaultDirectedGraph<DbRecipe, DefaultEdge>(DefaultEdge::class.java)
+    fun toRecipeGraph(): DefaultDirectedGraph<RecipeSelection, DefaultEdge> {
+        val graph = DefaultDirectedGraph<RecipeSelection, DefaultEdge>(DefaultEdge::class.java)
 
         val recipesByProducts = recipes.values
-            .flatMap { recipe -> recipe.recipe.results.map { it.item.id to recipe.recipe } }
+            .flatMap { recipe -> recipe.recipe.results.map { it.item.id to recipe } }
             .groupBy { it.first }
             .mapValues { it.value.map { it.second } }
 
-        recipes.values.forEach { graph.addVertex(it.recipe) }
+        recipes.values.forEach { graph.addVertex(it) }
         recipes.values.forEach { sel ->
             sel.ingredientsProperty
                 .get()
@@ -110,7 +109,7 @@ class RecipeGroup : Controller() {
                 .flatMap { recipesByProducts[it] ?: emptyList() }
                 .toSet()
                 .forEach {
-                    graph.addEdge(it, sel.recipe)
+                    graph.addEdge(it, sel)
                 }
         }
 
