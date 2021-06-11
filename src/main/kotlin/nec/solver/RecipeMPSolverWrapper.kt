@@ -73,6 +73,7 @@ class RecipeMPSolverWrapper {
         want = gia.wantAmount
         have = gia.haveAmount
         infCost = gia.infiniteCost
+        byproductCost = gia.byproductCost
         allowInfinite = gia.allowInfinite
     }
 
@@ -144,14 +145,22 @@ class RecipeMPSolverWrapper {
         recipes.values.forEach { recipe ->
             recipe.recipe.ingredients.forEach { (itemId, amount) ->
                 items[itemId]?.constraint?.setCoefficient(recipe.variable, (-amount).toDouble())
+                items[itemId]?.byprodExpr?.setCoefficient(recipe.variable, (amount).toDouble())
             }
             // TODO this doesn't handle a recipe with same input and output
             recipe.recipe.results.forEach { (itemId, amount) ->
                 items[itemId]?.constraint?.setCoefficient(recipe.variable, amount.toDouble())
+                items[itemId]?.byprodExpr?.setCoefficient(recipe.variable, -amount.toDouble())
             }
             objective.setCoefficient(recipe.variable, recipe.cost)
             taxExpr.setCoefficient(recipe.variable, recipe.tax)
             costExpr.setCoefficient(recipe.variable, recipe.cost)
+        }
+
+        items.forEach { (_, item) ->
+            if (item.byproductCost > 0) {
+                objective.setCoefficient(item.byprodVar, item.byproductCost)
+            }
         }
     }
 
@@ -185,9 +194,12 @@ class RecipeMPSolverWrapper {
         have: Double = 0.0,
         allowInfinite: Boolean = false,
         infCost: Double = 0.0,
-        implicitlyInfinite: Boolean = false
+        implicitlyInfinite: Boolean = false,
+        var byproductCost: Double = 0.0
     ) {
         val constraint: MPConstraint = solver.makeConstraint("item-$itemId")
+        val byprodVar = solver.makeNumVar(0.0, Double.POSITIVE_INFINITY, "byprod-$itemId")
+        val byprodExpr = solver.makeConstraint(0.0, Double.POSITIVE_INFINITY, "byprod-expr-$itemId")
 
         var want: Double
             get() = constraint.lb()
@@ -230,6 +242,8 @@ class RecipeMPSolverWrapper {
         init {
             this.want = want
             this.have = have
+
+            byprodExpr.setCoefficient(byprodVar, 1.0)
         }
     }
 

@@ -49,6 +49,10 @@ class GroupItemAmount(
     val infiniteCostProperty = SimpleDoubleProperty(0.0)
     var infiniteCost by infiniteCostProperty
 
+    @SerialName("byproductCost")
+    val byproductCostProperty = SimpleDoubleProperty(0.0)
+    var byproductCost by byproductCostProperty
+
     @Transient
     val totalUsedAmountProperty = SimpleDoubleProperty(0.0)
     var totalUsedAmount by totalUsedAmountProperty

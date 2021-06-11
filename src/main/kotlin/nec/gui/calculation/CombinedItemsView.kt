@@ -43,6 +43,11 @@ class CombinedItemsView : View() {
             isVisible = appSettings.showInfiniteCosts
             appSettings.showInfiniteCostsProperty.onChange { isVisible = it }
         }
+        column("Byprod cost", GroupItemAmount::byproductCostProperty) {
+            applyCommonEditable()
+            isVisible = appSettings.showInfiniteCosts
+            appSettings.showInfiniteCostsProperty.onChange { isVisible = it }
+        }
         setOnMouseClicked {
             val gia: GroupItemAmount = it.findItem() ?: return@setOnMouseClicked
 
