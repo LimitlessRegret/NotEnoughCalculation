@@ -5,6 +5,8 @@ import com.dslplatform.json.runtime.Settings
 import com.google.ortools.linearsolver.MPSolver
 import nec.dbmodel.tables.pojos.Item
 import org.slf4j.LoggerFactory
+import kotlin.math.abs
+import kotlin.math.roundToInt
 import kotlin.system.measureTimeMillis
 
 val _LOG = LoggerFactory.getLogger("Utils")
@@ -73,3 +75,16 @@ private val PROGRAMMED_CIRCUITS = setOf(
 )
 
 fun Item.isProgrammedCircuit(): Boolean = internalName in PROGRAMMED_CIRCUITS
+
+fun toFraction(d: Double): Pair<Int, Int> {
+    val negligibleRatio = 0.01
+
+    var i = 1
+    while (true) {
+        val tem = d / (1.0 / i)
+        if (abs(tem - tem.roundToInt()) < negligibleRatio) {
+            return tem.roundToInt() to i
+        }
+        i++
+    }
+}

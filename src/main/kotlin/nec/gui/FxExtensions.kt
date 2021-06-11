@@ -16,6 +16,7 @@ import javafx.scene.control.TableCell
 import javafx.scene.control.TableRow
 import javafx.scene.input.MouseEvent
 import javafx.scene.input.ScrollEvent
+import nec.toFraction
 import reactor.core.publisher.Mono
 import reactor.core.scheduler.Schedulers
 import tornadofx.*
@@ -39,8 +40,21 @@ fun <T> ObservableValue<T>.onChangeDebounce(window: Long, block: (T) -> Unit) {
 
 fun Double.toIntLikeString(): String {
     if (this == toInt().toDouble()) return "${toInt()}"
+    if ((this * 10_000).toInt() == toInt() * 10_000) return "${toInt()}"
 
-    return toString()
+    val decimal = this - toInt()
+    val (num, den) = toFraction(decimal)
+
+    if (num == 1 && den == 1) {
+        return (toInt() + 1).toString()
+    }
+
+    val fracString = "$num/$den"
+    return if (this > 1) {
+        "${toInt()} + $fracString"
+    } else {
+        fracString
+    }
 }
 
 fun <K, V> ObservableMap<K, V>.bindValuesToList(list: ObservableList<V>) {
