@@ -1,5 +1,6 @@
 package nec.dbmodel
 
+import nec.GTOverclock
 import nec.RecipeItemAmount
 import nec.RecipeOreDictItemAmount
 import nec.dbmodel.tables.pojos.Recipe
@@ -17,6 +18,9 @@ class DbRecipe(
     val isEnabled = recipe.isEnabled
     val duration = recipe.duration
     val euT = recipe.euT
+
+    fun overclockToTier(tier: Int) =
+        GTOverclock.calculateOverclock(euT, GTOverclock.V[tier], duration)
 
     fun uniqueOreDictItemsInSlot(slot: Int) = oreDictIngredients[slot]
         .oreDicts

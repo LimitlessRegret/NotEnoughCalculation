@@ -3,9 +3,11 @@ package nec.gui
 import javafx.geometry.Insets
 import javafx.geometry.Orientation
 import javafx.geometry.Pos
+import javafx.scene.control.ToggleGroup
 import javafx.scene.layout.Priority
 import javafx.stage.FileChooser
 import javafx.stage.StageStyle
+import nec.GTOverclock
 import nec.gui.calculation.CombinedItemsView
 import nec.gui.calculation.RecipeTableView
 import nec.gui.recipe.RecipeSearchView
@@ -56,6 +58,39 @@ class MasterView : View("Not Enough Calculation") {
                     item("Toggle test bar").action {
                         appSettings.showTestBar = !appSettings.showTestBar
                     }
+                }
+                menu("_Overclock") {
+                    val group = ToggleGroup()
+
+                    isMnemonicParsing = true
+                    GTOverclock.TIER_NAMES
+                        .withIndex()
+                        .forEach { (idx, name) ->
+                            if (idx == 1) {
+                                separator()
+                            }
+
+                            item(
+                                if (idx == 0) {
+                                    "Disabled"
+                                } else {
+                                    "$name (${GTOverclock.V[idx]})"
+                                }
+                            ) {
+                                val radio = radiobutton(group = group)
+
+                                fun select() {
+                                    appSettings.overclockToTier = idx
+                                }
+
+                                radio.action { select() }
+                                action { select() }
+
+                                appSettings.overclockToTierProperty
+                                    .onChange { radio.isSelected = idx == it }
+                                radio.isSelected = idx == appSettings.overclockToTier
+                            }
+                        }
                 }
             }
             hbox {

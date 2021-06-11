@@ -39,18 +39,34 @@ class RecipeTableView : View() {
                 it?.recipeCrafts?.get(cdf.value.recipe.id)?.toIntLikeString()
             }
         }
-        column("EU/t", RecipeSelection::euT)
-
-        column("Machine") { cdf: TableColumn.CellDataFeatures<RecipeSelection, String> ->
-            cdf.value.recipe.let { recipe ->
-                when (recipe.euT) {
-                    null -> recipe.machine
-                    else -> "${recipe.machine} (${recipe.euT.toPowerTier()})"
-                }
-            }.toProperty()
+        column("Dur (t)") { cdf: TableColumn.CellDataFeatures<RecipeSelection, String> ->
+            appSettings.overclockToTierProperty.stringBinding { ocTier ->
+                cdf.value.recipe
+                    .overclockToTier(ocTier as Int)
+                    .duration.toString()
+            }
         }
-//        column("Duration", RecipeSelection::durationTicks)
-//        column("eu/t", RecipeSelection::euT)
+        column("EU/t") { cdf: TableColumn.CellDataFeatures<RecipeSelection, String> ->
+            appSettings.overclockToTierProperty.stringBinding { ocTier ->
+                cdf.value.recipe
+                    .overclockToTier(ocTier as Int)
+                    .euT.toString()
+            }
+        }
+        column("Machine") { cdf: TableColumn.CellDataFeatures<RecipeSelection, String> ->
+            appSettings.overclockToTierProperty.stringBinding { ocTier ->
+                cdf.value.recipe.let { recipe ->
+                    when (recipe.euT) {
+                        null -> recipe.machine
+                        else -> "${recipe.machine} (${
+                            cdf.value.recipe
+                                .overclockToTier(ocTier as Int)
+                                .euT.toPowerTier()
+                        })"
+                    }
+                }
+            }
+        }
         ingredientColumns = addItemColumns(true)
         resultColumns = addItemColumns(false)
 
