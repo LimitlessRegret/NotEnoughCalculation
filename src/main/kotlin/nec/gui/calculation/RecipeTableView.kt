@@ -5,6 +5,7 @@ import javafx.scene.control.TableView
 import javafx.scene.input.KeyCode
 import javafx.scene.input.MouseButton
 import javafx.scene.input.MouseEvent
+import javafx.scene.paint.Color
 import javafx.scene.text.Font
 import javafx.scene.text.FontSmoothingType
 import javafx.stage.StageStyle
@@ -174,6 +175,11 @@ class RecipeTableView : View() {
                                     this.leftAnchor = 0
                                     this.topAnchor = 2
                                     this.rightAnchor = 0
+                                }
+                                model.group.items[item?.itemId]?.let { groupItem ->
+                                    if (!isIngredient && groupItem.totalUsedAmount < 0.000001 && groupItem.wantAmount < 0.000001) {
+                                        fill = Color.GRAY
+                                    }
                                 }
                             }
                         }
