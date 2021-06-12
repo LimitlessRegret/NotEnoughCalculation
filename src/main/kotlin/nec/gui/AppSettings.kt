@@ -15,4 +15,6 @@ class AppSettings : Controller() {
     var showTestBar by showTestBarProperty
     val overclockToTierProperty = SimpleIntegerProperty(0)
     var overclockToTier by overclockToTierProperty
+    val integerSolutionProperty = SimpleBooleanProperty(false)
+    var integerSolution by integerSolutionProperty
 }

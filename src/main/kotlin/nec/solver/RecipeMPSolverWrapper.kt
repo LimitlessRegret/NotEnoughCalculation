@@ -10,13 +10,15 @@ import nec.gui.calculation.RecipeGroup
 import nec.gui.calculation.RecipeSelection
 import org.slf4j.LoggerFactory
 
-class RecipeMPSolverWrapper {
+class RecipeMPSolverWrapper(
+    val integerSolution: Boolean = false
+) {
     private val recipes: MutableMap<Int, RecipeConfig> = hashMapOf()
     private val items: MutableMap<Int, ItemConfig> = hashMapOf()
     private val haveItems: MutableMap<Int, MPVariable> = hashMapOf()
     private val infiniteItems: MutableMap<Int, MPVariable> = hashMapOf()
     private val solver = MPSolver("SimpleLpProgram", MPSolver.OptimizationProblemType.CBC_MIXED_INTEGER_PROGRAMMING)
-    private val costVar = solver.makeIntVar(0.0, Double.POSITIVE_INFINITY, "cost")
+    private val costVar = solver.makeNumVar(0.0, Double.POSITIVE_INFINITY, "cost")
     private val costExpr = solver.makeConstraint("cost")
     private val taxVar = solver.makeIntVar(0.0, Double.POSITIVE_INFINITY, "tax")
     private val taxExpr = solver.makeConstraint("tax")
@@ -37,11 +39,18 @@ class RecipeMPSolverWrapper {
         recipes[recipe.recipeId] = RecipeConfig(MinimalRecipe(recipe))
     }
 
+    private fun makeNumVar(lb: Double, ub: Double, name: String) =
+        if (integerSolution) {
+            solver.makeIntVar(lb, ub, name)
+        } else {
+            solver.makeNumVar(lb, ub, name)
+        }
+
     fun setItemInfinite(itemId: Int, cost: Double) {
         LOG.debug("setItemInfinite($itemId, $cost)")
 
         val variable = infiniteItems.computeIfAbsent(itemId) {
-            solver.makeIntVar(0.0, Double.POSITIVE_INFINITY, "inf-$itemId")
+            makeNumVar(0.0, Double.POSITIVE_INFINITY, "inf-$itemId")
         }
         costExpr.setCoefficient(variable, cost)
         objective.setCoefficient(variable, cost)
@@ -57,7 +66,7 @@ class RecipeMPSolverWrapper {
         }
 
         val variable = haveItems.computeIfAbsent(itemId) {
-            solver.makeIntVar(0.0, amount, "have-$itemId")
+            makeNumVar(0.0, amount, "have-$itemId")
         }
         variable.setUb(amount)
         costExpr.setCoefficient(variable, -100.0)
@@ -252,7 +261,7 @@ class RecipeMPSolverWrapper {
         cost: Double = 1.0,
         tax: Double = 1.0,
     ) {
-        val variable: MPVariable = solver.makeIntVar(0.0, Double.POSITIVE_INFINITY, "recipe-${recipe.id}")
+        val variable: MPVariable = makeNumVar(0.0, Double.POSITIVE_INFINITY, "recipe-${recipe.id}")
 
         var cost: Double
             get() = costExpr.getCoefficient(variable)
@@ -274,8 +283,8 @@ class RecipeMPSolverWrapper {
             Loader.loadNativeLibraries()
         }
 
-        fun from(group: RecipeGroup): RecipeMPSolverWrapper {
-            val wrapper = RecipeMPSolverWrapper()
+        fun from(group: RecipeGroup, integerSolution: Boolean): RecipeMPSolverWrapper {
+            val wrapper = RecipeMPSolverWrapper(integerSolution)
 
             group.recipes.values
                 .forEach(wrapper::addRecipe)

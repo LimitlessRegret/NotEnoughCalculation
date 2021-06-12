@@ -59,7 +59,7 @@ class MasterView : View("Not Enough Calculation") {
                         appSettings.showTestBar = !appSettings.showTestBar
                     }
                 }
-                menu("_Overclock") {
+                menu("Over_clock") {
                     val group = ToggleGroup()
 
                     isMnemonicParsing = true
@@ -92,6 +92,24 @@ class MasterView : View("Not Enough Calculation") {
                             }
                         }
                 }
+                menu("_Options") {
+                    isMnemonicParsing = true
+
+                    item("Integer solution") {
+                        val cb = checkbox()
+
+                        fun toggle() {
+                            appSettings.integerSolution = !appSettings.integerSolution
+                        }
+
+                        cb.action(::toggle)
+                        action(::toggle)
+
+                        appSettings.integerSolutionProperty
+                            .onChange { cb.isSelected = it }
+                        cb.isSelected = appSettings.integerSolution
+                    }
+                }
             }
             hbox {
                 managedWhen(appSettings.showTestBarProperty)
@@ -120,7 +138,7 @@ class MasterView : View("Not Enough Calculation") {
                 }
                 button("Dump solver state") {
                     action {
-                        RecipeMPSolverWrapper.from(model.group).also {
+                        RecipeMPSolverWrapper.from(model.group, appSettings.integerSolution).also {
                             it.solve()
                             it.printState()
                         }

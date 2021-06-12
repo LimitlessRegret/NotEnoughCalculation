@@ -14,6 +14,7 @@ import java.io.File
 class RecipeCalculationViewModel : ViewModel() {
     val itemHighlights = ItemHighlightManager()
     val group: RecipeGroup by inject()
+    private val appSettings: AppSettings by inject()
     val maxIngredientsProperty = SimpleIntegerProperty(3)
     private var maxIngredients by maxIngredientsProperty
     val maxResultsProperty = SimpleIntegerProperty(4)
@@ -33,6 +34,9 @@ class RecipeCalculationViewModel : ViewModel() {
 
         recipeItemsListProperty.onChange {
             updateMaxIngredientsAndResults()
+        }
+        appSettings.integerSolutionProperty.onChange {
+            solve()
         }
 
         updateMaxIngredientsAndResults()

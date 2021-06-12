@@ -5,6 +5,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import kotlinx.serialization.json.Json
+import nec.gui.AppSettings
 import nec.solver.RecipeMPSolverWrapper
 import nec.solver.RecipeSolverSolution
 import org.jgrapht.graph.DefaultDirectedGraph
@@ -18,6 +19,8 @@ import java.io.File
 
 @Serializable
 class RecipeGroup : Controller() {
+    private val appSettings: AppSettings by inject()
+
     @SerialName("recipes")
     private val recipesBackingField = HashMap<Int, RecipeSelection>()
 
@@ -37,7 +40,7 @@ class RecipeGroup : Controller() {
     fun solve() {
         if (recipes.isEmpty()) return
 
-        val wrapper = RecipeMPSolverWrapper.from(this)
+        val wrapper = RecipeMPSolverWrapper.from(this, appSettings.integerSolution)
         solution = wrapper.getResults()
 
         // reset solution values in GIA
